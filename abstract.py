@@ -1,73 +1,45 @@
-from lexer import Token, TokenType
 from dataclasses import dataclass
+from lexer import Token, TokenType
 from location import Span
 
+
+@dataclass
 class Expression:
-    def __init__(self, span: Span):
-        self.span = span
+    span: Span
 
 
+@dataclass
 class NumberExpr(Expression):
-    def __init__(self, span: Span, value: Token):
-        super().__init__(span)
-        self.value = value
+    value: Token
 
 
+@dataclass
 class BinaryOp(Expression):
-    def __init__(
-        self,
-        span: Span,
-        left: Expression,
-        op: Token,
-        right: Expression,
-    ):
-        super().__init__(span)
-        self.left = left
-        self.op = op
-        self.right = right
+    left: Expression
+    op: Token
+    right: Expression
 
 
+@dataclass
 class IdentifierExpr(Expression):
-    def __init__(self, span: Span, value: Token):
-        super().__init__(span)
-        self.value = value
+    value: Token
 
 
+@dataclass
 class CallExpr(Expression):
-    def __init__(
-        self,
-        span: Span,
-        callee: IdentifierExpr,
-        arguments: list[Expression],
-    ):
-        super().__init__(span)
-        self.callee = callee
-        self.arguments = arguments
+    callee: IdentifierExpr
+    arguments: list[Expression]
 
 
+@dataclass
 class IfExpr(Expression):
-    def __init__(
-        self,
-        span: Span,
-        condition: Expression,
-        then_expr: Expression,
-        else_expr: Expression | None,
-    ):
-        super().__init__(span)
-        self.condition = condition
-        self.then_expr = then_expr
-        self.else_expr = else_expr
+    condition: Expression
+    then_expr: Expression
+    else_expr: Expression | None
 
 
+@dataclass
 class Function(Expression):
-    def __init__(
-        self,
-        span: Span,
-        name: str,
-        parameters: list[Token],
-        body: Expression | None,
-    ):
-        super().__init__(span)
-        self.name = name
-        self.parameters = parameters
-        self.body = body
+    name: str
+    parameters: list[Token]
+    body: Expression | None

@@ -34,10 +34,10 @@ class Parser:
         self.cursor += 1
         return token
     
-    def consume_assert(self, expected: Token, error_message: str) -> Token:
+    def consume_assert(self, expected: TokenType, error_message: str) -> Token:
         token = self.consume()
-        if token != expected:
-            raise Exception(error_message)
+        if token._type != expected:
+            raise Exception(f"{token.location.row}:{token.location.column}: {error_message}")
         return token
     
     def parse(self) -> list[Function]:
@@ -118,7 +118,6 @@ class Parser:
             
     def parse_function(self, is_extern: bool = False) -> Function:
         start = self.consume().location
-
         name = self.consume_assert(TokenType.Identifier, "Expected function name")
         self.consume_assert(TokenType.LParen, "Expected '(' after function name")
 
