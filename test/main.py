@@ -2,7 +2,6 @@ from lexer import *
 from parser import *
 
 if __name__ == "__main__":
-    from lexer import Lexer
 
     # Test operator precedence: 2 + 3 * 4
     source = "2 + 3 * 4"
