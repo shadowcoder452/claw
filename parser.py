@@ -35,7 +35,7 @@ class Parser:
         return token
     
     def consume_assert(self, expected: Token, error_message: str) -> Token:
-        token = consume()
+        token = self.consume()
         if token != expected:
             raise Exception(error_message)
         return token
@@ -67,7 +67,7 @@ class Parser:
                 token = self.consume()
                 ident = IdentifierExpr(token)
                 
-                if self.current_type != TokenType.LParen:
+                if self.current._type != TokenType.LParen:
                     return ident
                 
                 self.consume()
@@ -97,8 +97,36 @@ class Parser:
             case _:
                 raise ParserError(f"Unexpected token: {self.current._type.name}")
             
+    def parse_function(self, is_extern: bool = False) -> Function:
+        start = self.consume().location
+
+        name = self.consume_assert(TokenType.Identifier, "Expected function name")
+        self.consume_assert(TokenType.LParen, "Expected '(' after function name")
+
+        # Parse parameters
+        parameters: list[Token] = []
+        while self.current._type != TokenType.RParen and self.current._type != TokenType.Eof:
+            param = self.consume_assert(TokenType.Identifier, "Expected parameter name")
+            parameters.append(param)
+            if self.current._type == TokenType.Comma:
+                self.consume()
+
+        self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
+        end = self.consume_assert(TokenType.Colon, "Expected ':' before function body").location
+
+        # Parse body (None for extern functions)
+        body = None if is_extern else self.parse_expression()
+
+        return Function(
+            Span(start, body.span.end if body is not None else end),
+            name.value,
+            parameters,
+            body,
+        ) 
+        
     def parse_binary_op(self, left: Expression, op: Token) -> Expression:
         """Parse a binary operation using precedence climbing."""
+        
         # Get the precedence of the current operator
         current_precedence = PRECEDENCE_MAP.get(op._type, 0)
         

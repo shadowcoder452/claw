@@ -16,6 +16,7 @@ class TokenType(Enum):
     LParen = auto()
     RParen = auto()
     Comma = auto()
+    Colon = auto()
 
     # Operators
     Plus = auto()
@@ -37,6 +38,8 @@ SINGLE_CHAR_TOKENS = {
     '/': TokenType.Div,
     '<': TokenType.Less,
     '>': TokenType.Greater,
+    ',': TokenType.Comma,
+    ':': TokenType.Colon,
 }
 
 KEYWORDS = {
