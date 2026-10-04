@@ -38,7 +38,11 @@ def test_paren_expr():
         Token(TokenType.Number, "3"),
         Token(TokenType.Eof, ""),
     ]
-
+    
+def test_identifier():
+    assert lex("abcd") == [
+        Token(TokenType)
+    ]
 
 def test_unexpected_char():
     with pytest.raises(

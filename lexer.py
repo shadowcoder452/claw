@@ -3,14 +3,48 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 class TokenType(Enum):
+    # Literals
     Number = auto()
+    Identifier = auto()
+
+    # Keywords
+    Fn = auto()       # Function
+    If = auto()
+    Else = auto()
+    Extern = auto()
+    
+    LParen = auto()
+    RParen = auto()
+    Comma = auto()
+
+    # Operators
     Plus = auto()
     Minus = auto()
     Mul = auto()
     Div = auto()
-    LParen = auto()
-    RParen = auto()
+    Less = auto()     # Comparison
+    Greater = auto()  # Comparison
+    Equal = auto()    # Equality (==)
+
     Eof = auto()
+    
+SINGLE_CHAR_TOKENS = {
+    '(': TokenType.LParen,
+    ')': TokenType.RParen,
+    '+': TokenType.Plus,
+    '-': TokenType.Minus,
+    '*': TokenType.Mul,
+    '/': TokenType.Div,
+    '<': TokenType.Less,
+    '>': TokenType.Greater,
+}
+
+KEYWORDS = {
+    "fn": TokenType.Fn,
+    "if": TokenType.If,
+    "else": TokenType.Else,
+    "extern": TokenType.Extern,
+}
     
 @dataclass
 class Location:
@@ -35,10 +69,16 @@ class Lexer:
     def current(self) -> str:
         if 0 <= self.cursor < len(self.source):
             return self.source[self.cursor]
-        return "\0"
+        return '\0'
+    
+    def peek(self, offset: int = 1) -> str:
+        pos = self.cursor + offset
+        if pos < len(self.source):
+            return self.source[pos]
+        return '\0'
 
     def increment(self):
-        if self.current == '\n':
+        if self.current == '\n' or self.current == ';':
             self.row += 1
             self.column = 0
         else:
@@ -62,6 +102,11 @@ class Lexer:
                 self.increment()
                 continue
             
+            if self.current == '#':
+                while self.current != '\n' and self.current != '\0':
+                    self.increment()
+                continue
+            
             # recognize numbers
             if self.current.isdigit():
                 start = self.cursor
@@ -71,19 +116,30 @@ class Lexer:
                 self.push_token(TokenType.Number, self.source[start:self.cursor])
                 continue
             
+            # Check for == before single characters
+            if self.current == '=' and self.peek() == '=':
+                self.push_token(TokenType.Equal, "==")
+                self.increment()
+                self.increment()
+                continue
+            
             # recognize operators and parentheses
-            single_char_tokens = {
-                '(': TokenType.LParen,
-                ')': TokenType.RParen,
-                '+': TokenType.Plus,
-                '-': TokenType.Minus,
-                '*': TokenType.Mul,
-                '/': TokenType.Div,
-            }
-
-            if token_type := single_char_tokens.get(self.current):
+            if token_type := SINGLE_CHAR_TOKENS.get(self.current):
                 self.push_token(token_type, self.current)
                 self.increment()
+                continue
+            
+            # recognize identifiers
+            if self.current.isalpha() or self.current == '_':
+                start = self.cursor
+                while self.current.isalnum() or self.current == '_':
+                    self.increment()
+                    
+                word = self.source[start:self.cursor]
+                
+                token_type = KEYWORDS.get(word, TokenType.Identifier)
+                    
+                self.push_token(token_type, word)
                 continue
 
             raise Exception(f"Unexpected character '{self.current}' at row {self.row}, column {self.column}")

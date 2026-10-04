@@ -1,12 +1,15 @@
 from lexer import Token, TokenType
-from abstract import Expression, NumberExpr, BinaryOp
+from abstract import *
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
-    TokenType.Mul: 40,
-    TokenType.Div: 40,
+    TokenType.Less: 10,
+    TokenType.Greater: 10,
+    TokenType.Equal: 10,
     TokenType.Plus: 20,
     TokenType.Minus: 20,
+    TokenType.Mul: 40,
+    TokenType.Div: 40,
 }
 
 class ParserError(Exception):
@@ -31,6 +34,12 @@ class Parser:
         self.cursor += 1
         return token
     
+    def consume_assert(self, expected: Token, error_message: str) -> Token:
+        token = consume()
+        if token != expected:
+            raise Exception(error_message)
+        return token
+    
     def parse_expression(self) -> Expression:
         left = self.parse_primary()
 
@@ -53,6 +62,37 @@ class Parser:
             case TokenType.Number:
                 token = self.consume()
                 return NumberExpr(token)
+            
+            case TokenType.Identifier:
+                token = self.consume()
+                ident = IdentifierExpr(token)
+                
+                if self.current_type != TokenType.LParen:
+                    return ident
+                
+                self.consume()
+                arguments: list[Expression] = []
+                
+                while self.current._type != TokenType.RParen and self.current._type != TokenType.Eof:
+                    arguments.append(self.parse_expression())
+                    if self.current._type == TokenType.Comma:
+                        self.consume()
+                
+                self.consume_assert(TokenType.RParen, "Expected ')' after function arguments")
+                return CallExpr(ident, arguments)
+            
+            case TokenType.If:
+                self.consume()
+                
+                condition = self.parse_expression()
+                then_expr = self.parse_expression()
+                else_expr = None
+                
+                if self.current._type == TokenType.Else:
+                    self.consume()
+                    else_expr = self.parse_expression()
+                
+                return IfExpr(condition, then_expr, else_expr)
             
             case _:
                 raise ParserError(f"Unexpected token: {self.current._type.name}")
