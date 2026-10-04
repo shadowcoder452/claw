@@ -130,17 +130,15 @@ class Parser:
             if self.current._type == TokenType.Comma:
                 self.consume()
 
-        self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
+        end = self.consume_assert(TokenType.RParen, "Expected ')' after parameters").location
         
-        if is_extern:
-            end = ...
-            body = None
-        else:
+        body = None
+        if not is_extern:
             body = self.parse_expression()
             end = body.span.end
 
         return Function(
-            Span(start, body.span.end if body is not None else end),
+            Span(start, end),
             name.value,
             parameters,
             body,

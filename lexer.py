@@ -27,8 +27,6 @@ class TokenType(Enum):
     Less = auto()     # Comparison
     Greater = auto()  # Comparison
     Equal = auto()    # Equality (==)
-
-    Newline = auto()
     
     Eof = auto()
     
@@ -43,7 +41,6 @@ SINGLE_CHAR_TOKENS = {
     '>': TokenType.Greater,
     ',': TokenType.Comma,
     ':': TokenType.Colon,
-    ';': TokenType.Newline,
 }
 
 KEYWORDS = {
@@ -81,7 +78,6 @@ class Lexer:
 
     def increment(self):
         if self.current == '\n' or self.current == ';':
-            self.push_token(TokenType.Newline, "")
             self.row += 1
             self.column = 0
         else:

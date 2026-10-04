@@ -4,13 +4,13 @@ from parser import *
 if __name__ == "__main__":
     source = """
     # Test the full parser
-    func factorial(n) :
+    fn factorial(n)
         if n < 2
             1
         else
             n * factorial(n - 1)
 
-    func fib(n) :
+    fn fib(n)
         if n < 2
             n
         else
