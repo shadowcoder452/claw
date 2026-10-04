@@ -41,7 +41,8 @@ def test_paren_expr():
     
 def test_identifier():
     assert lex("abcd") == [
-        Token(TokenType)
+        Token(TokenType.Identifier, "abcd"),
+        Token(TokenType.Eof, "")
     ]
 
 def test_unexpected_char():

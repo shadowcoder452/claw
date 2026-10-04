@@ -40,6 +40,24 @@ class Parser:
             raise Exception(error_message)
         return token
     
+    def parse(self) -> list[Function]:
+        """Parse the entire program."""
+        functions = []
+
+        while self.current._type != TokenType.Eof:
+            if self.current._type == TokenType.Fn:
+                functions.append(self.parse_function())
+            elif self.current._type == TokenType.Extern:
+                self.consume()  # eat 'extern'
+                functions.append(self.parse_function(is_extern=True))
+            else:
+                # Top-level expression - wrap it in an anonymous function
+                expr = self.parse_expression()
+                func = Function(expr.span, f"__anon_{len(functions)}", [], expr)
+                functions.append(func)
+
+        return functions
+    
     def parse_expression(self) -> Expression:
         left = self.parse_primary()
 
@@ -61,11 +79,11 @@ class Parser:
             
             case TokenType.Number:
                 token = self.consume()
-                return NumberExpr(token)
+                return NumberExpr(Span(token.location, token.location), token)
             
             case TokenType.Identifier:
                 token = self.consume()
-                ident = IdentifierExpr(token)
+                ident = IdentifierExpr(Span(token.location, token.location), token)
                 
                 if self.current._type != TokenType.LParen:
                     return ident
@@ -79,7 +97,7 @@ class Parser:
                         self.consume()
                 
                 self.consume_assert(TokenType.RParen, "Expected ')' after function arguments")
-                return CallExpr(ident, arguments)
+                return CallExpr(Span(ident.span.start, ident.span.end), ident, arguments)
             
             case TokenType.If:
                 self.consume()
@@ -92,7 +110,8 @@ class Parser:
                     self.consume()
                     else_expr = self.parse_expression()
                 
-                return IfExpr(condition, then_expr, else_expr)
+                span = Span(condition.span.start, else_expr.span.end if else_expr else then_expr.span.end)
+                return IfExpr(span, condition, then_expr, else_expr)
             
             case _:
                 raise ParserError(f"Unexpected token: {self.current._type.name}")
@@ -112,10 +131,13 @@ class Parser:
                 self.consume()
 
         self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
-        end = self.consume_assert(TokenType.Colon, "Expected ':' before function body").location
-
-        # Parse body (None for extern functions)
-        body = None if is_extern else self.parse_expression()
+        
+        if is_extern:
+            end = ...
+            body = None
+        else:
+            body = self.parse_expression()
+            end = body.span.end
 
         return Function(
             Span(start, body.span.end if body is not None else end),
@@ -136,4 +158,4 @@ class Parser:
             next_op = self.consume()
             right = self.parse_binary_op(right, next_op)
             
-        return BinaryOp(left, op, right)
+        return BinaryOp(Span(left.span.start, right.span.end), left, op, right)

@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import Optional
+from location import Location
 
 class TokenType(Enum):
     # Literals
@@ -27,6 +28,8 @@ class TokenType(Enum):
     Greater = auto()  # Comparison
     Equal = auto()    # Equality (==)
 
+    Newline = auto()
+    
     Eof = auto()
     
 SINGLE_CHAR_TOKENS = {
@@ -40,6 +43,7 @@ SINGLE_CHAR_TOKENS = {
     '>': TokenType.Greater,
     ',': TokenType.Comma,
     ':': TokenType.Colon,
+    ';': TokenType.Newline,
 }
 
 KEYWORDS = {
@@ -48,11 +52,6 @@ KEYWORDS = {
     "else": TokenType.Else,
     "extern": TokenType.Extern,
 }
-    
-@dataclass
-class Location:
-    row: int
-    column: int
 
 @dataclass
 class Token:
@@ -82,6 +81,7 @@ class Lexer:
 
     def increment(self):
         if self.current == '\n' or self.current == ';':
+            self.push_token(TokenType.Newline, "")
             self.row += 1
             self.column = 0
         else:
