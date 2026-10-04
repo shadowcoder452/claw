@@ -1,20 +1,19 @@
-
+from lexer import *
+from parser import *
 
 if __name__ == "__main__":
-    # Manually build AST for: 2 + (3 * 4)
-    ast = BinaryOp(
-        left=NumberExpr(Token(TokenType.Number, "2")),
-        op=Token(TokenType.Plus, "+"),
-        right=BinaryOp(
-            left=NumberExpr(Token(TokenType.Number, "3")),
-            op=Token(TokenType.Mul, "*"),
-            right=NumberExpr(Token(TokenType.Number, "4"))
-        )
-    )
+    from lexer import Lexer
 
-    print("AST for: 2 + 3 * 4")
-    print(f"Root operation: {ast.op.value}")
+    # Test operator precedence: 2 + 3 * 4
+    source = "2 + 3 * 4"
+    lexer = Lexer(source)
+    tokens = lexer.lex()
+    parser = Parser(tokens)
+    ast = parser.parse_expression()
+
+    print(f"Expression: {source}")
+    print(f"Root: {ast.op.value}")
     print(f"  Left: {ast.left.value.value}")
-    print(f"  Right operation: {ast.right.op.value}")
+    print(f"  Right: BinaryOp {ast.right.op.value}")
     print(f"    Left: {ast.right.left.value.value}")
     print(f"    Right: {ast.right.right.value.value}")

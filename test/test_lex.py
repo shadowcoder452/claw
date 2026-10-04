@@ -5,43 +5,38 @@ import pytest
 def lex(input: str):
     return Lexer(input).lex()
 
-
-def token(type: TokenType, value: str):
-    return Token(Location(0, 0), type, value)
-
-
 def test_number():
     assert lex("425") == [
-        token(TokenType.Number, "425"),
-        token(TokenType.Eof, ""),
+        Token(TokenType.Number, "425"),
+        Token(TokenType.Eof, ""),
     ]
 
 
 def test_whitespace():
     assert lex("   \t  \t\t") == [
-        token(TokenType.Eof, ""),
+        Token(TokenType.Eof, ""),
     ]
 
 
 def test_simple_expr():
     assert lex("1 + 2") == [
-        token(TokenType.Number, "1"),
-        token(TokenType.Plus, "+"),
-        token(TokenType.Number, "2"),
-        token(TokenType.Eof, ""),
+        Token(TokenType.Number, "1"),
+        Token(TokenType.Plus, "+"),
+        Token(TokenType.Number, "2"),
+        Token(TokenType.Eof, ""),
     ]
 
 
 def test_paren_expr():
     assert lex("(5 - 2) * 3") == [
-        token(TokenType.LParen, "("),
-        token(TokenType.Number, "5"),
-        token(TokenType.Minus, "-"),
-        token(TokenType.Number, "2"),
-        token(TokenType.RParen, ")"),
-        token(TokenType.Mul, "*"),
-        token(TokenType.Number, "3"),
-        token(TokenType.Eof, ""),
+        Token(TokenType.LParen, "("),
+        Token(TokenType.Number, "5"),
+        Token(TokenType.Minus, "-"),
+        Token(TokenType.Number, "2"),
+        Token(TokenType.RParen, ")"),
+        Token(TokenType.Mul, "*"),
+        Token(TokenType.Number, "3"),
+        Token(TokenType.Eof, ""),
     ]
 
 

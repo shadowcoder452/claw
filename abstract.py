@@ -8,7 +8,7 @@ class NumberExpr(Expression):
         self.value = value
         
 class BinaryOp(Expression):
-    def __init__(self, lhs: Expression, op: Token, rhs: Expression):
-        self.lhs = lhs
+    def __init__(self, left: Expression, op: Token, right: Expression):
+        self.left = left
         self.op = op
-        self.rhs = rhs
+        self.right = right

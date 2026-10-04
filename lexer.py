@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from dataclasses import dataclass, field
+from typing import Optional
 
 class TokenType(Enum):
     Number = auto()
@@ -18,9 +19,9 @@ class Location:
 
 @dataclass
 class Token:
-    location: Location = field(compare=False)
     _type: TokenType
     value: str
+    location: Optional[Location] = field(compare=False, default=None)
     
 class Lexer:
     def __init__(self, source: str):
@@ -46,9 +47,9 @@ class Lexer:
 
     def push_token(self, token_type: TokenType, value: str):
         token = Token(
-            Location(self.row, self.column - len(value) + 1),
             token_type,
             value,
+            Location(self.row, self.column - len(value) + 1),
         )
         self.tokens.append(token)
     
@@ -88,5 +89,5 @@ class Lexer:
             raise Exception(f"Unexpected character '{self.current}' at row {self.row}, column {self.column}")
 
         # add EOF token
-        self.tokens.append(Token(Location(self.row, self.column), TokenType.Eof, ""))
+        self.tokens.append(Token(TokenType.Eof, "", Location(self.row, self.column)))
         return self.tokens
