@@ -43,13 +43,3 @@ class Function(Expression):
     name: str
     parameters: list[Token]
     body: Expression | None
-    
-@dataclass
-class VariableDeclExpr(Expression):
-    name: str
-    value: Expression | None
-    
-@dataclass
-class VariableAssignExpr(Expression):
-    name: str
-    value: Expression

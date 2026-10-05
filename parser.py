@@ -3,14 +3,19 @@ from abstract import *
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
-    TokenType.Less: 10,
-    TokenType.Greater: 10,
-    TokenType.Equal: 10,
-    TokenType.Plus: 20,
-    TokenType.Minus: 20,
-    TokenType.Mul: 40,
-    TokenType.Div: 40,
+    TokenType.Assign: 50,
+    TokenType.Less: 100,
+    TokenType.Greater: 100,
+    TokenType.Equal: 100,
+    TokenType.Plus: 200,
+    TokenType.Minus: 200,
+    TokenType.Mul: 400,
+    TokenType.Div: 400,
 }
+
+RIGHT_ASSOCIATIVE = [
+    TokenType.Assign
+]
 
 class ParserError(Exception):
     pass
@@ -139,15 +144,26 @@ class Parser:
         ) 
         
     def parse_binary_op(self, left: Expression, op: Token) -> Expression:
-        """Parse a binary operation using precedence climbing."""
-        
-        # Get the precedence of the current operator
         current_precedence = PRECEDENCE_MAP.get(op._type, 0)
-        
+
         right = self.parse_primary()
-        
-        while PRECEDENCE_MAP.get(self.current._type, 0) > current_precedence:
+
+        while True:
+            next_precedence = PRECEDENCE_MAP.get(self.current._type, 0)
+
+            if op._type in RIGHT_ASSOCIATIVE:
+                if next_precedence < current_precedence:
+                    break
+            else:
+                if next_precedence <= current_precedence:
+                    break
+
             next_op = self.consume()
             right = self.parse_binary_op(right, next_op)
-            
-        return BinaryOp(Span(left.span.start, right.span.end), left, op, right)
+
+        return BinaryOp(
+            Span(left.span.start, right.span.end),
+            left,
+            op,
+            right,
+        )

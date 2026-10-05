@@ -1,5 +1,6 @@
 from lexer import *
 from parser import *
+from semantic_analyzer import *
 from pprint import pprint
 from format_function import format_function
 
@@ -11,7 +12,6 @@ fn add(a, b)
     a + b
 
 fn function1()
-    int x
     x = add(3, 2)
 
     """
@@ -20,6 +20,8 @@ fn function1()
     tokens = lexer.lex()
     parser = Parser(tokens)
     functions = parser.parse()
+    analyzer = SemanticAnalyzer(functions)
+    analyzer.analyze()
     
     for fn in functions:
         print(format_function(fn))
