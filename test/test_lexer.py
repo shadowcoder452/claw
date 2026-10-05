@@ -42,7 +42,20 @@ def test_paren_expr():
 def test_identifier():
     assert lex("abcd") == [
         Token(TokenType.Identifier, "abcd"),
+        Token(TokenType.Eof, ""),
+    ]
+    
+def test_semicolon():
+    assert lex(";;\n;;;") == [
         Token(TokenType.Eof, "")
+    ]
+
+def test_assignment():
+    assert lex("x = 10") == [
+        Token(TokenType.Identifier, "x"),
+        Token(TokenType.Assign, "="),
+        Token(TokenType.Number, "10"),
+        Token(TokenType.Eof, ""),
     ]
 
 def test_unexpected_char():

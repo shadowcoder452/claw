@@ -47,9 +47,6 @@ class Parser:
         while self.current._type != TokenType.Eof:
             if self.current._type == TokenType.Fn:
                 functions.append(self.parse_function())
-            elif self.current._type == TokenType.Extern:
-                self.consume()  # eat 'extern'
-                functions.append(self.parse_function(is_extern=True))
             else:
                 # Top-level expression - wrap it in an anonymous function
                 expr = self.parse_expression()
@@ -129,12 +126,10 @@ class Parser:
             if self.current._type == TokenType.Comma:
                 self.consume()
 
-        end = self.consume_assert(TokenType.RParen, "Expected ')' after parameters").location
+        self.consume_assert(TokenType.RParen, "Expected ')' after parameters").location
         
-        body = None
-        if not is_extern:
-            body = self.parse_expression()
-            end = body.span.end
+        body = self.parse_expression()
+        end = body.span.end
 
         return Function(
             Span(start, end),

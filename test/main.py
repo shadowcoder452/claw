@@ -1,27 +1,25 @@
 from lexer import *
 from parser import *
+from pprint import pprint
+from format_function import format_function
 
 if __name__ == "__main__":
     source = """
 # Test the full parser
-fn factorial(n)
-    if n < 2
-        1
-    else
-        n * factorial(n - 1)
 
-fn fib(n)
-    if n < 2
-        n
-    else
-        fib(n - 1) + fib(n - 2)
+fn add(a, b)
+    a + b
 
-# Top-level expression
-factorial(5)
+fn function1()
+    int x
+    x = add(3, 2)
+
     """
 
     lexer = Lexer(source)
     tokens = lexer.lex()
     parser = Parser(tokens)
     functions = parser.parse()
-    print(functions)
+    
+    for fn in functions:
+        print(format_function(fn))

@@ -12,7 +12,6 @@ class TokenType(Enum):
     Fn = auto()       # Function
     If = auto()
     Else = auto()
-    Extern = auto()
     
     LParen = auto()
     RParen = auto()
@@ -24,9 +23,10 @@ class TokenType(Enum):
     Minus = auto()
     Mul = auto()
     Div = auto()
-    Less = auto()     # Comparison
-    Greater = auto()  # Comparison
-    Equal = auto()    # Equality (==)
+    Less = auto()     # <
+    Greater = auto()  # >
+    Equal = auto()    # ==
+    Assign = auto()   # =
     
     Eof = auto()
     
@@ -41,13 +41,13 @@ SINGLE_CHAR_TOKENS = {
     '>': TokenType.Greater,
     ',': TokenType.Comma,
     ':': TokenType.Colon,
+    '=': TokenType.Assign,
 }
 
 KEYWORDS = {
     "fn": TokenType.Fn,
     "if": TokenType.If,
     "else": TokenType.Else,
-    "extern": TokenType.Extern,
 }
 
 @dataclass
@@ -62,7 +62,7 @@ class Lexer:
         self.tokens: list[Token] = []
         self.cursor = 0
         self.row = 0
-        self.column = 0
+        self.column = -1
         
     @property
     def current(self) -> str:
@@ -94,10 +94,13 @@ class Lexer:
     
     def lex(self) -> list[Token]:
         self.tokens.clear()
+        self.cursor = 0
+        self.row = 0
+        self.column = 0
         
         while self.current != '\0':
             # skip whitespace
-            if self.current.isspace():
+            if self.current.isspace() or self.current == ';':
                 self.increment()
                 continue
             
