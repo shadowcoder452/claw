@@ -40,7 +40,7 @@ class Parser:
     def consume_assert(self, expected: TokenType, error_message: str) -> Token:
         token = self.consume()
         if token._type != expected:
-            raise ParserError(Span(token.location.row, token.location.column), error_message)
+            raise ParserError(Span(token.location, token.location), error_message)
         return token
     
     def parse(self) -> list[Function]:
@@ -51,7 +51,10 @@ class Parser:
             if self.current._type == TokenType.Fn:
                 functions.append(self.parse_function())
             else:
-                raise ParserError(Span(self.current.row, self.current.column), f"Top-level expressions are now allowed")
+                raise ParserError(
+                    Span(self.current.location, self.current.location),
+                    "Top-level expressions are not allowed"
+                )
 
         return functions
     
@@ -94,10 +97,10 @@ class Parser:
                         self.consume()
                 
                 self.consume_assert(TokenType.RParen, "Expected ')' after function arguments")
-                return CallExpr(Span(ident.span.start, ident.span.end), ident, arguments)
+                return CallExpr(ident.span, ident, arguments)
             
             case TokenType.If:
-                self.consume()
+                start = self.consume()
                 
                 condition = self.parse_expression()
                 then_expr = self.parse_expression()
@@ -107,11 +110,25 @@ class Parser:
                     self.consume()
                     else_expr = self.parse_expression()
                 
-                span = Span(condition.span.start, else_expr.span.end if else_expr else then_expr.span.end)
-                return IfExpr(span, condition, then_expr, else_expr)
+                end = else_expr.span.end if else_expr else then_expr.span.end
+                
+                return IfExpr(Span(start, end), condition, then_expr, else_expr)
+            
+            case TokenType.Minus:
+                start = self.consume()
+                expr = self.parse_expression()
+                return BinaryOp(
+                    Span(start.location, expr.span.end),
+                    NumberExpr(Span(start.location, start.location), Token(TokenType.Number, "0", start.location)),
+                    start,
+                    expr
+                )
             
             case _:
-                raise ParserError(Span(self.current.location, self.current.location), f"Unexpected token: {self.current._type.name}")
+                raise ParserError(
+                    Span(self.current.location, self.current.location),
+                    f"Unexpected token: {self.current._type.name}"
+                )
             
     def parse_function(self, is_extern: bool = False) -> Function:
         start = self.consume().location
@@ -126,7 +143,7 @@ class Parser:
             if self.current._type == TokenType.Comma:
                 self.consume()
 
-        self.consume_assert(TokenType.RParen, "Expected ')' after parameters").location
+        self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
         
         body = self.parse_expression()
         end = body.span.end

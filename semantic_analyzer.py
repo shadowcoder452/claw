@@ -1,18 +1,19 @@
 from __future__ import annotations
 from abstract import *
 from enum import Enum, auto
-from error_types import SemanticError
+from error_types import SemanticError, SemanticWarning
+from scratch_limits import *
 
 class Symbol(Enum):
     Variable = auto()
     Function = auto()
     
-class SymTableError(Enum):
+class SymbolTableError(Enum):
     FuncRedeclared = auto()
-    FuncRedeclaredAsVar = auto()
+    VarRedeclaredAsFunc = auto()
 
-class SymTable:
-    def __init__(self, parent: SymTable | None = None):
+class SymbolTable:
+    def __init__(self, parent: SymbolTable | None = None):
         self.symbols: dict[str, Symbol] = {}
         self.parent = parent
         
@@ -25,21 +26,61 @@ class SymTable:
 
         return None
     
-    def assign(self, sym_type: Symbol, name: str) -> SymTableError | None:
-        if sym_type == Symbol.Function and name in self.symbols:
+    def assign(self, symbol_type: Symbol, name: str) -> SymbolTableError | None:
+        if symbol_type == Symbol.Function and name in self.symbols:
             if self.symbols[name] == Symbol.Function:
-                # will be put in analyzer raise SemanticError(f"Cannot redeclare function '{name}'")
-                return SymTableError.FuncRedeclared
+                return SymbolTableError.FuncRedeclared
             elif self.symbols[name] == Symbol.Variable:
-                # will be put in analyzer raise SemanticError(f"Cannot redeclare variable '{name}' as function")
-                return SymTableError.FuncRedeclaredAsVar
+                return SymbolTableError.VarRedeclaredAsFunc
         
-        self.symbols[name] = sym_type
+        self.symbols[name] = symbol_type
         return None
         
 
 class SemanticAnalyzer:
     def __init__(self, ast: list[Function]):
+        self.symbols = SymbolTable()
         self.ast = ast
+        self.warnings: list[SemanticWarning] = []
         
-    def analyze(self): pass
+    def analyze(self):
+        for fn in self.ast:
+            self.visit(fn)
+            
+    def visit(self, node):
+        method_name = f"visit_{type(node).__name__}"
+        method = getattr(self, method_name, None)
+        
+        if method == None:
+            raise SemanticError(node.span, f"[Internal] Semantic Analyzer: No visitor for '{type(node).__name__}'")
+        
+        return method(node)
+    
+    def visit_Function(self, node: Function):
+        fn = self.symbols.assign(Symbol.Function, node.name)
+
+        if fn == SymbolTableError.FuncRedeclared:
+            raise SemanticError(node.span, f"Cannot redeclare function '{node.name}'")
+        elif fn == SymbolTableError.VarRedeclaredAsFunc:
+            raise SemanticError(node.span, f"Cannot redeclare variable '{node.name}' as function")
+
+        old_symbols = self.symbols
+        self.symbols = SymbolTable(old_symbols)
+
+        for param in node.parameters:
+            self.symbols.assign(Symbol.Variable, param.value)
+        
+        self.visit(node.body)
+
+        self.symbols = old_symbols
+        
+    def visit_NumberExpr(self, node: NumberExpr):
+        value = int(node.value.value)
+
+        if value > MAX_SAFE_INTEGER:
+            self.warnings.append(SemanticWarning(
+                node.span,
+                "Number is too large to be represented exactly"
+            ))
+            
+    def visit_BinaryOp(self, node: BinaryOp): pass

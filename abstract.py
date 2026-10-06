@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from lexer import Token, TokenType
 from location import Span
 
-
 @dataclass
 class Expression:
     span: Span
@@ -42,4 +41,4 @@ class IfExpr(Expression):
 class Function(Expression):
     name: str
     parameters: list[Token]
-    body: Expression | None
+    body: Expression
