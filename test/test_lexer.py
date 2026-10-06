@@ -57,10 +57,28 @@ def test_assignment():
         Token(TokenType.Number, "10"),
         Token(TokenType.Eof, ""),
     ]
+    
+def test_single_char_token():
+    assert lex("<") == [
+        Token(TokenType.Less, "<"),
+        Token(TokenType.Eof, ""),
+    ]
+    
+def test_paren_expr_comparison():
+    assert lex("0 < (2 == 0);") == [
+        Token(TokenType.Number, "0"),
+        Token(TokenType.Less, "<"),
+        Token(TokenType.LParen, "("),
+        Token(TokenType.Number, "2"),
+        Token(TokenType.Equal, "=="),
+        Token(TokenType.Number, "0"),
+        Token(TokenType.RParen, ")"),
+        Token(TokenType.Eof, ""),
+    ]
 
 def test_unexpected_char():
     with pytest.raises(
         Exception,
-        match=r"Unexpected character '@' at row 0, column 9",
+        match=r"1:10: Unexpected character '@'",
     ):
         lex("74 + 1 * @")

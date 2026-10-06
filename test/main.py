@@ -19,9 +19,9 @@ fn function1()
     lexer = Lexer(source)
     tokens = lexer.lex()
     parser = Parser(tokens)
-    functions = parser.parse()
-    analyzer = SemanticAnalyzer(functions)
+    ast = parser.parse()
+    analyzer = SemanticAnalyzer(ast)
     analyzer.analyze()
     
-    for fn in functions:
+    for fn in ast:
         print(format_function(fn))

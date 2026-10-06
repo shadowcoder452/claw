@@ -1,7 +1,8 @@
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import Optional
-from location import Location
+from location import Location, Span
+from error_types import LexerError
 
 class TokenType(Enum):
     # Literals
@@ -144,7 +145,7 @@ class Lexer:
                 self.push_token(token_type, word)
                 continue
 
-            raise Exception(f"Unexpected character '{self.current}' at row {self.row}, column {self.column}")
+            raise LexerError(Span(Location(self.row, self.column), Location(self.row, self.column)), f"Unexpected character '{self.current}'")
 
         # add EOF token
         self.tokens.append(Token(TokenType.Eof, "", Location(self.row, self.column)))

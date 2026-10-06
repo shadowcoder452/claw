@@ -9,20 +9,24 @@ def parse(source: str):
     return parser.parse()
 
 
+def parse_expr(source: str):
+    return parse(f"fn test() {source}")
+
+
 def test_number():
-    ast = parse("42")[0]
+    ast = parse_expr("42")[0]
 
     assert ast.body.value.value == "42"
 
 
 def test_identifier():
-    ast = parse("x")[0]
+    ast = parse_expr("x")[0]
 
     assert ast.body.value.value == "x"
 
 
 def test_addition():
-    ast = parse("2 + 3")[0]
+    ast = parse_expr("2 + 3")[0]
 
     assert ast.body.op.value == "+"
     assert ast.body.left.value.value == "2"
@@ -30,7 +34,7 @@ def test_addition():
 
 
 def test_subtraction():
-    ast = parse("5 - 2")[0]
+    ast = parse_expr("5 - 2")[0]
 
     assert ast.body.op.value == "-"
     assert ast.body.left.value.value == "5"
@@ -38,7 +42,7 @@ def test_subtraction():
 
 
 def test_multiplication():
-    ast = parse("4 * 3")[0]
+    ast = parse_expr("4 * 3")[0]
 
     assert ast.body.op.value == "*"
     assert ast.body.left.value.value == "4"
@@ -46,7 +50,7 @@ def test_multiplication():
 
 
 def test_division():
-    ast = parse("8 / 2")[0]
+    ast = parse_expr("8 / 2")[0]
 
     assert ast.body.op.value == "/"
     assert ast.body.left.value.value == "8"
@@ -54,7 +58,7 @@ def test_division():
 
 
 def test_less_than():
-    ast = parse("2 < 3")[0]
+    ast = parse_expr("2 < 3")[0]
 
     assert ast.body.op.value == "<"
     assert ast.body.left.value.value == "2"
@@ -62,7 +66,7 @@ def test_less_than():
 
 
 def test_greater_than():
-    ast = parse("3 > 2")[0]
+    ast = parse_expr("3 > 2")[0]
 
     assert ast.body.op.value == ">"
     assert ast.body.left.value.value == "3"
@@ -70,7 +74,7 @@ def test_greater_than():
 
 
 def test_equal():
-    ast = parse("2 == 2")[0]
+    ast = parse_expr("2 == 2")[0]
 
     assert ast.body.op.value == "=="
     assert ast.body.left.value.value == "2"
@@ -78,7 +82,7 @@ def test_equal():
 
 
 def test_parentheses():
-    ast = parse("(2 + 3) * 4")[0]
+    ast = parse_expr("(2 + 3) * 4")[0]
 
     assert ast.body.op.value == "*"
 
@@ -91,7 +95,7 @@ def test_parentheses():
 
 def test_operator_precedence():
     # 2 + (3 * 4)
-    ast = parse("2 + 3 * 4")[0]
+    ast = parse_expr("2 + 3 * 4")[0]
 
     assert ast.body.op.value == "+"
     assert ast.body.left.value.value == "2"
@@ -103,7 +107,7 @@ def test_operator_precedence():
 
 def test_operator_precedence_reversed():
     # (2 * 3) + 4
-    ast = parse("2 * 3 + 4")[0]
+    ast = parse_expr("2 * 3 + 4")[0]
 
     assert ast.body.op.value == "+"
 
@@ -116,7 +120,7 @@ def test_operator_precedence_reversed():
 
 def test_multiple_operations():
     # (1 + (2 * 3)) + 4
-    ast = parse("1 + 2 * 3 + 4")[0]
+    ast = parse_expr("1 + 2 * 3 + 4")[0]
 
     assert ast.body.op.value == "+"
     assert ast.body.left.op.value == "+"
@@ -132,7 +136,7 @@ def test_multiple_operations():
 
 def test_left_associativity():
     # (10 - 3) - 2, NOT 10 - (3 - 2)
-    ast = parse("10 - 3 - 2")[0]
+    ast = parse_expr("10 - 3 - 2")[0]
 
     assert ast.body.op.value == "-"
 
@@ -144,7 +148,7 @@ def test_left_associativity():
 
 
 def test_function_call():
-    ast = parse("foo(42)")[0]
+    ast = parse_expr("foo(42)")[0]
 
     call = ast.body
 
@@ -154,7 +158,7 @@ def test_function_call():
 
 
 def test_function_call_multiple_arguments():
-    ast = parse("foo(1, 2, 3)")[0]
+    ast = parse_expr("foo(1, 2, 3)")[0]
 
     call = ast.body
 
@@ -167,7 +171,7 @@ def test_function_call_multiple_arguments():
 
 
 def test_function_call_expression_arguments():
-    ast = parse("foo(1 + 2, 3 * 4)")[0]
+    ast = parse_expr("foo(1 + 2, 3 * 4)")[0]
 
     call = ast.body
 
@@ -181,7 +185,7 @@ def test_function_call_expression_arguments():
 
 
 def test_if_expression():
-    ast = parse("if 1 < 2 3")[0]
+    ast = parse_expr("if 1 < 2 3")[0]
 
     if_expr = ast.body
 
@@ -194,7 +198,7 @@ def test_if_expression():
 
 
 def test_if_else_expression():
-    ast = parse("if 1 < 2 3 else 4")[0]
+    ast = parse_expr("if 1 < 2 3 else 4")[0]
 
     if_expr = ast.body
 
@@ -227,6 +231,7 @@ def test_function_no_parameters():
     assert function.name == "foo"
     assert function.parameters == []
     assert function.body.value.value == "42"
+
 
 def test_multiple_functions():
     ast = parse(

@@ -1,4 +1,5 @@
 from lexer import Token, TokenType
+from error_types import ParserError
 from abstract import *
 
 # Operator precedence - higher number = higher precedence
@@ -13,12 +14,9 @@ PRECEDENCE_MAP = {
     TokenType.Div: 400,
 }
 
-RIGHT_ASSOCIATIVE = [
+RIGHT_ASSOCIATIVE = {
     TokenType.Assign
-]
-
-class ParserError(Exception):
-    pass
+}
 
 class Parser:
     def __init__(self, tokens: list[Token]):
@@ -42,7 +40,7 @@ class Parser:
     def consume_assert(self, expected: TokenType, error_message: str) -> Token:
         token = self.consume()
         if token._type != expected:
-            raise Exception(f"{token.location.row}:{token.location.column}: {error_message}")
+            raise ParserError(Span(token.location.row, token.location.column), error_message)
         return token
     
     def parse(self) -> list[Function]:
@@ -53,10 +51,7 @@ class Parser:
             if self.current._type == TokenType.Fn:
                 functions.append(self.parse_function())
             else:
-                # Top-level expression - wrap it in an anonymous function
-                expr = self.parse_expression()
-                func = Function(expr.span, f"__anon_{len(functions)}", [], expr)
-                functions.append(func)
+                raise ParserError(Span(self.current.row, self.current.column), f"Top-level expressions are now allowed")
 
         return functions
     
@@ -72,10 +67,10 @@ class Parser:
     def parse_primary(self) -> Expression:
         match self.current._type:
             case TokenType.LParen:
-                self.consume()
+                start = self.consume()
                 expr = self.parse_expression()
                 if self.current._type != TokenType.RParen:
-                    raise ParserError(f"Expected ')' but got {self.current._type}")
+                    raise ParserError(Span(start, self.current.location), f"Expected ')' but got {self.current._type}")
                 self.consume()
                 return expr
             
@@ -116,7 +111,7 @@ class Parser:
                 return IfExpr(span, condition, then_expr, else_expr)
             
             case _:
-                raise ParserError(f"Unexpected token: {self.current._type.name}")
+                raise ParserError(Span(self.current.location, self.current.location), f"Unexpected token: {self.current._type.name}")
             
     def parse_function(self, is_extern: bool = False) -> Function:
         start = self.consume().location
