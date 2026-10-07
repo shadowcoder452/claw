@@ -1,7 +1,7 @@
 # Semantic Analyzer Todo:
 - [x] NumberExpr
-- [ ] BinaryOp
-- [ ] IdentifierExpr
+- [x] BinaryOp
+- [x] IdentifierExpr
 - [ ] CallExpr
 - [ ] IfExpr
 - [x] Function

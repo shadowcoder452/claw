@@ -13,8 +13,7 @@ fn function1()
     x = add(3, 2)
 """
 if __name__ == "__main__":
-    source = "fn main() -9999999999999999999"
-
+    source = "fn a() x = "
     lexer = Lexer(source)
     tokens = lexer.lex()
     parser = Parser(tokens)

@@ -80,7 +80,12 @@ class SemanticAnalyzer:
         if value > MAX_SAFE_INTEGER:
             self.warnings.append(SemanticWarning(
                 node.span,
-                "Number is too large to be represented exactly"
+                f"Integer constant is too large and cannot be represented exactly"
             ))
             
-    def visit_BinaryOp(self, node: BinaryOp): pass
+    def visit_BinaryOp(self, node: BinaryOp):
+        self.visit(node.left)
+        self.visit(node.right)
+        
+    def visit_IdentifierExpr(self, node: IdentifierExpr):
+        self.symbols.assign(Symbol.Variable, node.value.value)
