@@ -42,3 +42,8 @@ class Function(Expression):
     name: str
     parameters: list[Token]
     body: Expression
+
+@dataclass
+class AssignExpr(Expression):
+    target: IdentifierExpr
+    value: Expression

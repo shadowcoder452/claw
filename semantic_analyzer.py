@@ -60,9 +60,9 @@ class SemanticAnalyzer:
         fn = self.symbols.assign(Symbol.Function, node.name)
 
         if fn == SymbolTableError.FuncRedeclared:
-            raise SemanticError(node.span, f"Cannot redeclare function '{node.name}'")
+            raise SemanticError(node.span, f"cannot redeclare function '{node.name}'")
         elif fn == SymbolTableError.VarRedeclaredAsFunc:
-            raise SemanticError(node.span, f"Cannot redeclare variable '{node.name}' as function")
+            raise SemanticError(node.span, f"cannot redeclare variable '{node.name}' as function")
 
         old_symbols = self.symbols
         self.symbols = SymbolTable(old_symbols)
@@ -87,5 +87,15 @@ class SemanticAnalyzer:
         self.visit(node.left)
         self.visit(node.right)
         
+    def visit_AssignExpr(self, node: AssignExpr):
+        name = node.target.value.value
+        symbol_type = self.symbols.lookup(name)
+        
+        if symbol_type == Symbol.Function:
+            raise SemanticError(node.span, "variable required as target of assigment")
+        
+        self.symbols.assign(symbol_type, name)
+        
     def visit_IdentifierExpr(self, node: IdentifierExpr):
-        self.symbols.assign(Symbol.Variable, node.value.value)
+        if not self.symbols.lookup(node.value.value):
+            raise SemanticError(node.span, f"undefined symbol '{node.value.value}' referenced")

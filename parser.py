@@ -173,9 +173,13 @@ class Parser:
             next_op = self.consume()
             right = self.parse_binary_op(right, next_op)
 
-        return BinaryOp(
-            Span(left.span.start, right.span.end),
-            left,
-            op,
-            right,
-        )
+        if op._type == TokenType.Assign:
+            if not isinstance(left, IdentifierExpr):
+                raise ParserError(
+                    left.span,
+                    "Left side of assignment must be an identifier"
+                )
+
+            return AssignExpr(Span(left.span.start, right.span.end), left, right)
+
+        return BinaryOp(Span(left.span.start, right.span.end), left, op, right)

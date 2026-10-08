@@ -49,5 +49,12 @@ def format_expression(expr: Expression, indent: int = 0) -> str:
             result += format_expression(expr.else_expr, indent + 4)
 
         return result
+    
+    if isinstance(expr, AssignExpr):
+        return (
+            f"{prefix}AssignExpr\n"
+            f"{format_expression(expr.target, indent + 2)}\n"
+            f"{format_expression(expr.value, indent + 2)}"
+        )
 
     return f"{prefix}Unknown expression: {type(expr).__name__}"

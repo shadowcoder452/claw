@@ -5,3 +5,4 @@
 - [ ] CallExpr
 - [ ] IfExpr
 - [x] Function
+- [x] AssignExpr

@@ -4,8 +4,6 @@ from semantic_analyzer import *
 from pprint import pprint
 from format_function import format_function
 """
-# Test the full parser
-
 fn add(a, b)
     a + b
 
@@ -13,7 +11,9 @@ fn function1()
     x = add(3, 2)
 """
 if __name__ == "__main__":
-    source = "fn a() x = "
+    source = """
+fn add(x, y) x + y
+"""
     lexer = Lexer(source)
     tokens = lexer.lex()
     parser = Parser(tokens)
