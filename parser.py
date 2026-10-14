@@ -4,6 +4,7 @@ from abstract import *
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
+    TokenType.Assign: 50,
     TokenType.Less: 100,
     TokenType.Greater: 100,
     TokenType.Equal: 100,
@@ -41,6 +42,12 @@ class Parser:
             raise ParserError(Span(token.location, token.location), error_message)
         return token
     
+    def peek(self, offset: int = 1) -> Token:
+        index = self.cursor + offset
+        if index < len(self.tokens):
+            return self.tokens[index]
+        return self.tokens[-1] # EOF
+    
     def parse(self) -> list[Function]:
         """Parse the entire program."""
         functions = []
@@ -68,7 +75,7 @@ class Parser:
     def parse_primary(self) -> Expression:
         match self.current._type:
             case TokenType.LParen:
-                start = self.consume()
+                start = self.consume().location
                 expr = self.parse_expression()
                 if self.current._type != TokenType.RParen:
                     raise ParserError(Span(start, self.current.location), f"Expected ')' but got {self.current._type}")
@@ -86,31 +93,7 @@ class Parser:
                 if self.current._type != TokenType.LParen:
                     return ident
                 
-                self.consume()
-                arguments: list[Expression] = []
-                
-                while self.current._type != TokenType.RParen and self.current._type != TokenType.Eof:
-                    arguments.append(self.parse_expression())
-                    if self.current._type == TokenType.Comma:
-                        self.consume()
-                
-                self.consume_assert(TokenType.RParen, "Expected ')' after function arguments")
-                return CallExpr(ident.span, ident, arguments)
-            
-            case TokenType.If:
-                start = self.consume().location
-                
-                condition = self.parse_expression()
-                then_expr = self.parse_expression()
-                else_expr = None
-                
-                if self.current._type == TokenType.Else:
-                    self.consume()
-                    else_expr = self.parse_expression()
-                
-                end = else_expr.span.end if else_expr else then_expr.span.end
-                
-                return IfStmt(Span(start, end), condition, then_expr, else_expr)
+                return self.parse_call(ident)
             
             case TokenType.Minus:
                 return self.parse_unary()
@@ -118,10 +101,75 @@ class Parser:
             case _:
                 raise ParserError(
                     Span(self.current.location, self.current.location),
-                    f"Unexpected token: {self.current._type.name}"
+                    f"Unexpected token: {self.current.value}"
                 )
+    
+    def parse_statement(self) -> Statement:
+        match self.current._type:
+            case TokenType.If:
+                return self.parse_if_statement()
+            
+            case TokenType.Identifier:
+                if self.peek()._type == TokenType.Assign:
+                    token = self.consume()
+                    ident = IdentifierExpr(Span(token.location, token.location), token)
+
+                    self.consume()  # Consume '='
+                    expr = self.parse_expression()
+
+                    return ExprStmt(
+                        Span(ident.span.start, expr.span.end),
+                        AssignExpr(
+                            Span(ident.span.start, expr.span.end),
+                            ident,
+                            expr
+                        )
+                    )
+
+                return self.parse_expression()
+            
+            case TokenType.LCurly:
+                return self.parse_block()
+            
+            case _:
+                expr = self.parse_expression()
+                return ExprStmt(expr.span, expr)
+        
+                
+    def parse_if_statement(self) -> IfStmt:
+        start = self.consume().location
+        
+        condition = self.parse_expression()
+        then_expr = self.parse_statement()
+        else_expr = None
+        
+        if self.current._type == TokenType.Else:
+            self.consume()
+            else_expr = self.parse_statement()
+        
+        end = else_expr.span.end if else_expr else then_expr.span.end
+        
+        return IfStmt(Span(start, end), condition, then_expr, else_expr)                
+                
+    def parse_call(self, ident: IdentifierExpr) -> CallExpr:
+        self.consume()
+        arguments: list[Expression] = []
+        
+        while self.current._type not in (
+            TokenType.RParen,
+            TokenType.Eof
+        ):
+            arguments.append(self.parse_expression())
+            if self.current._type == TokenType.Comma:
+                self.consume()
+        
+        start = ident.span.start
+        end = self.consume_assert(TokenType.RParen, "Expected ')' after function arguments").location
+        
+        return CallExpr(Span(start, end), ident, arguments)
 
     def parse_unary(self) -> Expression:
+        # Stop if no unary minus
         if self.current._type != TokenType.Minus:
             return self.parse_primary()
         
@@ -133,8 +181,26 @@ class Parser:
             Token(TokenType.Minus, "-", start),
             expr,
         )
+        
+    def parse_block(self) -> Block:
+        start = self.consume().location
+
+        statements = []
+
+        while self.current._type not in (
+            TokenType.RCurly,
+            TokenType.Eof,
+        ):
+            statements.append(self.parse_statement())
+
+        end = self.consume_assert(TokenType.RCurly, "Expected '}' before end of file").location
+
+        return Block(
+            Span(start, end),
+            statements,
+        )
             
-    def parse_function(self, is_extern: bool = False) -> Function:
+    def parse_function(self) -> Function:
         start = self.consume().location
         name = self.consume_assert(TokenType.Identifier, "Expected function name")
         self.consume_assert(TokenType.LParen, "Expected '(' after function name")
@@ -163,7 +229,7 @@ class Parser:
 
         self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
         
-        body = self.parse_expression()
+        body = self.parse_statement()
         end = body.span.end
         
         return Function(

@@ -4,5 +4,6 @@
 - [x] IdentifierExpr
 - [x] CallExpr
 - [ ] IfStmt
-- [x] FunctionStmt
+- [x] Function
 - [x] AssignExpr
+- [x] Block

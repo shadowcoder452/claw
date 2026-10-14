@@ -144,3 +144,7 @@ class SemanticAnalyzer:
 
         for argument in node.arguments:
             self.visit(argument)
+            
+    def visit_Block(self, node: Block):
+        for statement in node.statements:
+            self.visit(statement)

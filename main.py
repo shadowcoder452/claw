@@ -1,8 +1,8 @@
-from lexer import *
-from parser import *
-from semantic_analyzer import *
+from lexer import Lexer
+from parser import Parser
+from semantic_analyzer import SemanticAnalyzer
 from pprint import pprint
-from format_function import format_function
+from ast_formatter import format_ast
 import sys
 """
 fn add(a, b)
@@ -28,6 +28,5 @@ if __name__ == "__main__":
     
     for warning in analyzer.warnings:
         print(warning)
-    
-    for fn in ast:
-        print(format_function(fn))
+        
+    print(format_ast(ast))

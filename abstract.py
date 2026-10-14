@@ -9,6 +9,10 @@ class Expression:
 @dataclass
 class Statement:
     span: Span
+    
+@dataclass
+class ExprStmt(Statement):
+    expr: Expression
 
 
 @dataclass
@@ -34,7 +38,7 @@ class CallExpr(Expression):
     arguments: list[Expression]
 
 @dataclass
-class AssignStmt(Statement):
+class AssignExpr(Expression):
     target: IdentifierExpr
     value: Expression
 
@@ -53,4 +57,4 @@ class Function(Statement):
     
 @dataclass
 class Block(Statement):
-    statements: list[Statement]
+    statements: list[Expression | Statement]

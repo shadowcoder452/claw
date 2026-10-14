@@ -16,6 +16,8 @@ class TokenType(Enum):
     
     LParen = auto()
     RParen = auto()
+    LCurly = auto()
+    RCurly = auto()
     Comma = auto()
     Colon = auto()
 
@@ -43,6 +45,8 @@ SINGLE_CHAR_TOKENS = {
     ',': TokenType.Comma,
     ':': TokenType.Colon,
     '=': TokenType.Assign,
+    '{': TokenType.LCurly,
+    '}': TokenType.RCurly
 }
 
 KEYWORDS = {
@@ -105,7 +109,7 @@ class Lexer:
                 self.increment()
                 continue
             
-            if self.current == '#':
+            if self.current == '/' and self.peek() == '/':
                 while self.current != '\n' and self.current != '\0':
                     self.increment()
                 continue
@@ -157,5 +161,5 @@ class Lexer:
             )
 
         # add EOF token
-        self.tokens.append(Token(TokenType.Eof, "", Location(self.row, self.column)))
+        self.tokens.append(Token(TokenType.Eof, "End of file", Location(self.row, self.column)))
         return self.tokens

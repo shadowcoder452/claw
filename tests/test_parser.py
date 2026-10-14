@@ -1,156 +1,154 @@
 from lexer import *
 from parser import *
+import pytest
 
 
-def parse(source: str):
+def parse(source: str) -> list[Function]:
     lexer = Lexer(source)
     tokens = lexer.lex()
     parser = Parser(tokens)
     return parser.parse()
 
 
-def parse_expr(source: str):
-    return parse(f"fn test() {source}")
+def parse_expr(source: str) -> Statement:
+    return parse(f"fn test() {source}")[0].body
 
 
 def test_number():
-    ast = parse_expr("42")[0]
+    expr = parse_expr("42")
 
-    assert ast.body.value.value == "42"
+    assert expr.expr.value.value == "42"
 
 
 def test_identifier():
-    ast = parse_expr("x")[0]
+    expr = parse_expr("x")
 
-    assert ast.body.value.value == "x"
+    assert expr.value.value == "x"
 
 
 def test_addition():
-    ast = parse_expr("2 + 3")[0]
+    expr = parse_expr("2 + 3")
 
-    assert ast.body.op.value == "+"
-    assert ast.body.left.value.value == "2"
-    assert ast.body.right.value.value == "3"
+    assert expr.expr.op.value == "+"
+    assert expr.expr.left.value.value == "2"
+    assert expr.expr.right.value.value == "3"
 
 
 def test_subtraction():
-    ast = parse_expr("5 - 2")[0]
+    expr = parse_expr("5 - 2")
 
-    assert ast.body.op.value == "-"
-    assert ast.body.left.value.value == "5"
-    assert ast.body.right.value.value == "2"
+    assert expr.expr.op.value == "-"
+    assert expr.expr.left.value.value == "5"
+    assert expr.expr.right.value.value == "2"
 
 
 def test_multiplication():
-    ast = parse_expr("4 * 3")[0]
+    expr = parse_expr("4 * 3")
 
-    assert ast.body.op.value == "*"
-    assert ast.body.left.value.value == "4"
-    assert ast.body.right.value.value == "3"
+    assert expr.expr.op.value == "*"
+    assert expr.expr.left.value.value == "4"
+    assert expr.expr.right.value.value == "3"
 
 
 def test_division():
-    ast = parse_expr("8 / 2")[0]
+    expr = parse_expr("8 / 2")
 
-    assert ast.body.op.value == "/"
-    assert ast.body.left.value.value == "8"
-    assert ast.body.right.value.value == "2"
+    assert expr.expr.op.value == "/"
+    assert expr.expr.left.value.value == "8"
+    assert expr.expr.right.value.value == "2"
 
 
 def test_less_than():
-    ast = parse_expr("2 < 3")[0]
+    expr = parse_expr("2 < 3")
 
-    assert ast.body.op.value == "<"
-    assert ast.body.left.value.value == "2"
-    assert ast.body.right.value.value == "3"
+    assert expr.expr.op.value == "<"
+    assert expr.expr.left.value.value == "2"
+    assert expr.expr.right.value.value == "3"
 
 
 def test_greater_than():
-    ast = parse_expr("3 > 2")[0]
+    expr = parse_expr("3 > 2")
 
-    assert ast.body.op.value == ">"
-    assert ast.body.left.value.value == "3"
-    assert ast.body.right.value.value == "2"
+    assert expr.expr.op.value == ">"
+    assert expr.expr.left.value.value == "3"
+    assert expr.expr.right.value.value == "2"
 
 
 def test_equal():
-    ast = parse_expr("2 == 2")[0]
+    expr = parse_expr("2 == 2")
 
-    assert ast.body.op.value == "=="
-    assert ast.body.left.value.value == "2"
-    assert ast.body.right.value.value == "2"
+    assert expr.expr.op.value == "=="
+    assert expr.expr.left.value.value == "2"
+    assert expr.expr.right.value.value == "2"
 
 
 def test_parentheses():
-    ast = parse_expr("(2 + 3) * 4")[0]
+    expr = parse_expr("(2 + 3) * 4")
 
-    assert ast.body.op.value == "*"
+    assert expr.expr.op.value == "*"
 
-    assert ast.body.left.op.value == "+"
-    assert ast.body.left.left.value.value == "2"
-    assert ast.body.left.right.value.value == "3"
+    assert expr.expr.left.op.value == "+"
+    assert expr.expr.left.left.value.value == "2"
+    assert expr.expr.left.right.value.value == "3"
 
-    assert ast.body.right.value.value == "4"
+    assert expr.expr.right.value.value == "4"
 
 
 def test_operator_precedence():
     # 2 + (3 * 4)
-    ast = parse_expr("2 + 3 * 4")[0]
+    expr = parse_expr("2 + 3 * 4")
 
-    assert ast.body.op.value == "+"
-    assert ast.body.left.value.value == "2"
+    assert expr.expr.op.value == "+"
+    assert expr.expr.left.value.value == "2"
 
-    assert ast.body.right.op.value == "*"
-    assert ast.body.right.left.value.value == "3"
-    assert ast.body.right.right.value.value == "4"
+    assert expr.expr.right.op.value == "*"
+    assert expr.expr.right.left.value.value == "3"
+    assert expr.expr.right.right.value.value == "4"
 
 
 def test_operator_precedence_reversed():
     # (2 * 3) + 4
-    ast = parse_expr("2 * 3 + 4")[0]
+    expr = parse_expr("2 * 3 + 4")
 
-    assert ast.body.op.value == "+"
+    assert expr.expr.op.value == "+"
 
-    assert ast.body.left.op.value == "*"
-    assert ast.body.left.left.value.value == "2"
-    assert ast.body.left.right.value.value == "3"
+    assert expr.expr.left.op.value == "*"
+    assert expr.expr.left.left.value.value == "2"
+    assert expr.expr.left.right.value.value == "3"
 
-    assert ast.body.right.value.value == "4"
+    assert expr.expr.right.value.value == "4"
 
 
 def test_multiple_operations():
     # (1 + (2 * 3)) + 4
-    ast = parse_expr("1 + 2 * 3 + 4")[0]
+    expr = parse_expr("1 + 2 * 3 + 4")
 
-    assert ast.body.op.value == "+"
-    assert ast.body.left.op.value == "+"
+    assert expr.expr.op.value == "+"
+    assert expr.expr.left.op.value == "+"
 
-    assert ast.body.left.left.value.value == "1"
+    assert expr.expr.left.left.value.value == "1"
 
-    assert ast.body.left.right.op.value == "*"
-    assert ast.body.left.right.left.value.value == "2"
-    assert ast.body.left.right.right.value.value == "3"
+    assert expr.expr.left.right.op.value == "*"
+    assert expr.expr.left.right.left.value.value == "2"
+    assert expr.expr.left.right.right.value.value == "3"
 
-    assert ast.body.right.value.value == "4"
+    assert expr.expr.right.value.value == "4"
 
 
 def test_left_associativity():
-    # (10 - 3) - 2, NOT 10 - (3 - 2)
-    ast = parse_expr("10 - 3 - 2")[0]
+    expr = parse_expr("10 - 3 - 2")
 
-    assert ast.body.op.value == "-"
+    assert expr.expr.op.value == "-"
 
-    assert ast.body.left.op.value == "-"
-    assert ast.body.left.left.value.value == "10"
-    assert ast.body.left.right.value.value == "3"
+    assert expr.expr.left.op.value == "-"
+    assert expr.expr.left.left.value.value == "10"
+    assert expr.expr.left.right.value.value == "3"
 
-    assert ast.body.right.value.value == "2"
+    assert expr.expr.right.value.value == "2"
 
 
 def test_function_call():
-    ast = parse_expr("foo(42)")[0]
-
-    call = ast.body
+    call = parse_expr("foo(42)")
 
     assert call.callee.value.value == "foo"
     assert len(call.arguments) == 1
@@ -158,9 +156,7 @@ def test_function_call():
 
 
 def test_function_call_multiple_arguments():
-    ast = parse_expr("foo(1, 2, 3)")[0]
-
-    call = ast.body
+    call = parse_expr("foo(1, 2, 3)")
 
     assert call.callee.value.value == "foo"
     assert len(call.arguments) == 3
@@ -170,10 +166,8 @@ def test_function_call_multiple_arguments():
     assert call.arguments[2].value.value == "3"
 
 
-def test_function_call_expression_arguments():
-    ast = parse_expr("foo(1 + 2, 3 * 4)")[0]
-
-    call = ast.body
+def test_function_call_expr_arguments():
+    call = parse_expr("foo(1 + 2, 3 * 4)")
 
     assert call.arguments[0].op.value == "+"
     assert call.arguments[0].left.value.value == "1"
@@ -184,33 +178,27 @@ def test_function_call_expression_arguments():
     assert call.arguments[1].right.value.value == "4"
 
 
-def test_if_expression():
-    ast = parse_expr("if 1 < 2 3")[0]
-
-    if_expr = ast.body
+def test_if_expr():
+    if_expr = parse_expr("if 1 < 2 3")
 
     assert if_expr.condition.op.value == "<"
     assert if_expr.condition.left.value.value == "1"
     assert if_expr.condition.right.value.value == "2"
 
-    assert if_expr.then_expr.value.value == "3"
+    assert if_expr.then_expr.expr.value.value == "3"
     assert if_expr.else_expr is None
 
 
-def test_if_else_expression():
-    ast = parse_expr("if 1 < 2 3 else 4")[0]
-
-    if_expr = ast.body
+def test_if_else_expr():
+    if_expr = parse_expr("if 1 < 2 3 else 4")
 
     assert if_expr.condition.op.value == "<"
-    assert if_expr.then_expr.value.value == "3"
-    assert if_expr.else_expr.value.value == "4"
+    assert if_expr.then_expr.expr.value.value == "3"
+    assert if_expr.else_expr.expr.value.value == "4"
 
 
 def test_function():
-    ast = parse("fn add(a, b) a + b")[0]
-
-    function = ast
+    function = parse("fn add(a, b) a + b")[0]
 
     assert function.name == "add"
     assert len(function.parameters) == 2
@@ -224,13 +212,11 @@ def test_function():
 
 
 def test_function_no_parameters():
-    ast = parse("fn foo() 42")[0]
-
-    function = ast
+    function = parse("fn foo() 42")[0]
 
     assert function.name == "foo"
     assert function.parameters == []
-    assert function.body.value.value == "42"
+    assert function.body.expr.value.value == "42"
 
 
 def test_multiple_functions():
@@ -248,39 +234,39 @@ def test_multiple_functions():
     
 
 def test_unary_minus_number():
-    ast = parse_expr("-5")[0]
+    expr = parse_expr("-5")
 
-    assert ast.body.op.value == "-"
-    assert ast.body.left.value.value == "0"
-    assert ast.body.right.value.value == "5"
+    assert expr.expr.op.value == "-"
+    assert expr.expr.left.value.value == "0"
+    assert expr.expr.right.value.value == "5"
 
 
 def test_unary_minus_identifier():
-    ast = parse_expr("-x")[0]
+    expr = parse_expr("-x")
 
-    assert ast.body.op.value == "-"
-    assert ast.body.left.value.value == "0"
-    assert ast.body.right.value.value == "x"
+    assert expr.expr.op.value == "-"
+    assert expr.expr.left.value.value == "0"
+    assert expr.expr.right.value.value == "x"
 
 
-def test_unary_minus_parenthesized_expression():
-    ast = parse_expr("-(2 + 3)")[0]
+def test_unary_minus_parenthesized_expr():
+    expr = parse_expr("-(2 + 3)")
 
-    assert ast.body.op.value == "-"
-    assert ast.body.left.value.value == "0"
+    assert expr.expr.op.value == "-"
+    assert expr.expr.left.value.value == "0"
 
-    assert ast.body.right.op.value == "+"
-    assert ast.body.right.left.value.value == "2"
-    assert ast.body.right.right.value.value == "3"
+    assert expr.expr.right.op.value == "+"
+    assert expr.expr.right.left.value.value == "2"
+    assert expr.expr.right.right.value.value == "3"
 
 
 def test_double_unary_minus():
-    ast = parse_expr("--5")[0]
+    expr = parse_expr("--5")
 
-    assert ast.body.op.value == "-"
-    assert ast.body.left.value.value == "0"
+    assert expr.expr.op.value == "-"
+    assert expr.expr.left.value.value == "0"
 
-    inner = ast.body.right
+    inner = expr.expr.right
     assert inner.op.value == "-"
     assert inner.left.value.value == "0"
     assert inner.right.value.value == "5"
@@ -288,21 +274,31 @@ def test_double_unary_minus():
 
 def test_unary_minus_precedence():
     # (-2) * 3
-    ast = parse_expr("-2 * 3")[0]
+    expr = parse_expr("-2 * 3")
 
-    assert ast.body.op.value == "*"
-    assert ast.body.left.op.value == "-"
-    assert ast.body.left.right.value.value == "2"
-    assert ast.body.right.value.value == "3"
+    assert expr.expr.op.value == "*"
+    assert expr.expr.left.op.value == "-"
+    assert expr.expr.left.right.value.value == "2"
+    assert expr.expr.right.value.value == "3"
 
 
 def test_unary_minus_with_addition():
     # (-2) + 3
-    ast = parse_expr("-2 + 3")[0]
+    expr = parse_expr("-2 + 3")
 
-    assert ast.body.op.value == "+"
-    assert ast.body.left.op.value == "-"
-    assert ast.body.left.right.value.value == "2"
-    assert ast.body.right.value.value == "3"
-
-def test_unexpected(): ...
+    assert expr.expr.op.value == "+"
+    assert expr.expr.left.op.value == "-"
+    assert expr.expr.left.right.value.value == "2"
+    assert expr.expr.right.value.value == "3"
+    
+def test_empty_block():
+    block = parse("fn test() {}")[0].body
+    
+    assert len(block.statements) == 0
+    
+def test_unexpected_token():
+    with pytest.raises(
+        ParserError,
+        match=r"1:18: Unexpected token: End of file",
+    ):
+        parse_expr("5 + 2 -")
