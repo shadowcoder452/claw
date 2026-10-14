@@ -10,7 +10,7 @@ class TokenType(Enum):
     Identifier = auto()
 
     # Keywords
-    Fn = auto()       # Function
+    Fn = auto()       # FunctionStmt
     If = auto()
     Else = auto()
     
@@ -115,6 +115,12 @@ class Lexer:
                 start = self.cursor
                 while self.current.isdigit():
                     self.increment()
+                    
+                if self.current.isalpha() or self.current == "_":
+                    raise LexerError(
+                        Span(Location(self.row, self.column), Location(self.row, self.column)),
+                        "Invalid number literal"
+                    )
                 
                 self.push_token(TokenType.Number, self.source[start:self.cursor])
                 continue
@@ -145,7 +151,10 @@ class Lexer:
                 self.push_token(token_type, word)
                 continue
 
-            raise LexerError(Span(Location(self.row, self.column), Location(self.row, self.column)), f"Unexpected character '{self.current}'")
+            raise LexerError(
+                Span(Location(self.row, self.column), Location(self.row, self.column)),
+                f"Unexpected character '{self.current}'"
+            )
 
         # add EOF token
         self.tokens.append(Token(TokenType.Eof, "", Location(self.row, self.column)))

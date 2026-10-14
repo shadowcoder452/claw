@@ -4,7 +4,6 @@ from abstract import *
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
-    TokenType.Assign: 50,
     TokenType.Less: 100,
     TokenType.Greater: 100,
     TokenType.Equal: 100,
@@ -15,7 +14,6 @@ PRECEDENCE_MAP = {
 }
 
 RIGHT_ASSOCIATIVE = {
-    TokenType.Assign
 }
 
 class Parser:
@@ -100,7 +98,7 @@ class Parser:
                 return CallExpr(ident.span, ident, arguments)
             
             case TokenType.If:
-                start = self.consume()
+                start = self.consume().location
                 
                 condition = self.parse_expression()
                 then_expr = self.parse_expression()
@@ -112,23 +110,29 @@ class Parser:
                 
                 end = else_expr.span.end if else_expr else then_expr.span.end
                 
-                return IfExpr(Span(start, end), condition, then_expr, else_expr)
+                return IfStmt(Span(start, end), condition, then_expr, else_expr)
             
             case TokenType.Minus:
-                start = self.consume()
-                expr = self.parse_expression()
-                return BinaryOp(
-                    Span(start.location, expr.span.end),
-                    NumberExpr(Span(start.location, start.location), Token(TokenType.Number, "0", start.location)),
-                    start,
-                    expr
-                )
+                return self.parse_unary()
             
             case _:
                 raise ParserError(
                     Span(self.current.location, self.current.location),
                     f"Unexpected token: {self.current._type.name}"
                 )
+
+    def parse_unary(self) -> Expression:
+        if self.current._type != TokenType.Minus:
+            return self.parse_primary()
+        
+        start = self.consume().location
+        expr = self.parse_unary()
+        return BinaryOp(
+            Span(start, expr.span.end),
+            NumberExpr(Span(start, start), Token(TokenType.Number, "0", start)),
+            Token(TokenType.Minus, "-", start),
+            expr,
+        )
             
     def parse_function(self, is_extern: bool = False) -> Function:
         start = self.consume().location
@@ -137,23 +141,37 @@ class Parser:
 
         # Parse parameters
         parameters: list[Token] = []
-        while self.current._type != TokenType.RParen and self.current._type != TokenType.Eof:
-            param = self.consume_assert(TokenType.Identifier, "Expected parameter name")
-            parameters.append(param)
-            if self.current._type == TokenType.Comma:
+
+        if self.current._type != TokenType.RParen:
+            while True:
+                param = self.consume_assert(
+                    TokenType.Identifier,
+                    "Expected parameter name"
+                )
+                parameters.append(param)
+
+                if self.current._type == TokenType.RParen:
+                    break
+
+                if self.current._type != TokenType.Comma:
+                    raise ParserError(
+                        Span(self.current.location, self.current.location),
+                        "Expected ',' after parameter"
+                    )
+
                 self.consume()
 
         self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
         
         body = self.parse_expression()
         end = body.span.end
-
+        
         return Function(
             Span(start, end),
             name.value,
             parameters,
             body,
-        ) 
+        )
         
     def parse_binary_op(self, left: Expression, op: Token) -> Expression:
         current_precedence = PRECEDENCE_MAP.get(op._type, 0)

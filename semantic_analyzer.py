@@ -12,7 +12,7 @@ class Variable(Symbol):
     pass
 
 
-class Function(Symbol):
+class FunctionStmt(Symbol):
     def __init__(self, parameters: list[str]):
         self.parameters = parameters
 
@@ -40,8 +40,8 @@ class SymbolTable:
         if name in self.symbols:
             existing = self.symbols[name]
 
-            if isinstance(symbol, Function):
-                if isinstance(existing, Function):
+            if isinstance(symbol, FunctionStmt):
+                if isinstance(existing, FunctionStmt):
                     return SymbolTableError.FuncRedeclared
                 elif isinstance(existing, Variable):
                     return SymbolTableError.VarRedeclaredAsFunc
@@ -51,7 +51,7 @@ class SymbolTable:
 
 
 class SemanticAnalyzer:
-    def __init__(self, ast: list[Function]):
+    def __init__(self, ast: list[FunctionStmt]):
         self.symbols = SymbolTable()
         self.ast = ast
         self.warnings: list[SemanticWarning] = []
@@ -72,11 +72,11 @@ class SemanticAnalyzer:
 
         return method(node)
 
-    def visit_Function(self, node: Function):
+    def visit_Function(self, node: FunctionStmt):
         parameters = [param.value for param in node.parameters]
 
         fn = self.symbols.assign(
-            Function(parameters),
+            FunctionStmt(parameters),
             node.name
         )
 
@@ -112,7 +112,7 @@ class SemanticAnalyzer:
         name = node.target.value.value
         symbol = self.symbols.lookup(name)
 
-        if isinstance(symbol, Function):
+        if isinstance(symbol, FunctionStmt):
             raise SemanticError(node.span, "variable required as target of assignment")
 
         self.symbols.assign(Variable(), name)

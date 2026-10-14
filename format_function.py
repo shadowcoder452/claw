@@ -37,7 +37,7 @@ def format_expression(expr: Expression, indent: int = 0) -> str:
 
         return result
 
-    if isinstance(expr, IfExpr):
+    if isinstance(expr, IfStmt):
         result = f"{prefix}If\n"
         result += f"{prefix}  Condition:\n"
         result += format_expression(expr.condition, indent + 4)

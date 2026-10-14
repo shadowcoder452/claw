@@ -2,7 +2,7 @@
 - [x] NumberExpr
 - [x] BinaryOp
 - [x] IdentifierExpr
-- [ ] CallExpr
-- [ ] IfExpr
-- [x] Function
+- [x] CallExpr
+- [ ] IfStmt
+- [x] FunctionStmt
 - [x] AssignExpr

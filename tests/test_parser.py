@@ -245,3 +245,64 @@ def test_multiple_functions():
 
     assert ast[0].name == "add"
     assert ast[1].name == "sub"
+    
+
+def test_unary_minus_number():
+    ast = parse_expr("-5")[0]
+
+    assert ast.body.op.value == "-"
+    assert ast.body.left.value.value == "0"
+    assert ast.body.right.value.value == "5"
+
+
+def test_unary_minus_identifier():
+    ast = parse_expr("-x")[0]
+
+    assert ast.body.op.value == "-"
+    assert ast.body.left.value.value == "0"
+    assert ast.body.right.value.value == "x"
+
+
+def test_unary_minus_parenthesized_expression():
+    ast = parse_expr("-(2 + 3)")[0]
+
+    assert ast.body.op.value == "-"
+    assert ast.body.left.value.value == "0"
+
+    assert ast.body.right.op.value == "+"
+    assert ast.body.right.left.value.value == "2"
+    assert ast.body.right.right.value.value == "3"
+
+
+def test_double_unary_minus():
+    ast = parse_expr("--5")[0]
+
+    assert ast.body.op.value == "-"
+    assert ast.body.left.value.value == "0"
+
+    inner = ast.body.right
+    assert inner.op.value == "-"
+    assert inner.left.value.value == "0"
+    assert inner.right.value.value == "5"
+
+
+def test_unary_minus_precedence():
+    # (-2) * 3
+    ast = parse_expr("-2 * 3")[0]
+
+    assert ast.body.op.value == "*"
+    assert ast.body.left.op.value == "-"
+    assert ast.body.left.right.value.value == "2"
+    assert ast.body.right.value.value == "3"
+
+
+def test_unary_minus_with_addition():
+    # (-2) + 3
+    ast = parse_expr("-2 + 3")[0]
+
+    assert ast.body.op.value == "+"
+    assert ast.body.left.op.value == "-"
+    assert ast.body.left.right.value.value == "2"
+    assert ast.body.right.value.value == "3"
+
+def test_unexpected(): ...

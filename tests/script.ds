@@ -1,3 +1,4 @@
 fn add(a, b) a + b
 
-fn main() add(3, add(4, x))
+fn main(a, b, c)
+    -a + b * 3
