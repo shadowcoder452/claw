@@ -155,3 +155,6 @@ class SemanticAnalyzer:
         
         if node.else_expr:
             self.visit(node.else_expr)
+            
+    def visit_ExprStmt(self, node: ExprStmt):
+        self.visit(node.expr)

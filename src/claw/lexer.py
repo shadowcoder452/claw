@@ -119,7 +119,8 @@ class Lexer:
                 start = self.cursor
                 while self.current.isdigit():
                     self.increment()
-                    
+                
+                # prevents trailing identifiers (123a)
                 if self.current.isalpha() or self.current == "_":
                     raise LexerError(
                         Span(Location(self.row, self.column), Location(self.row, self.column)),
@@ -143,7 +144,7 @@ class Lexer:
                 continue
             
             # recognize identifiers
-            if self.current.isalpha() or self.current == '_':
+            if self.current.isalpha() or self.current in ('_', '@'):
                 start = self.cursor
                 while self.current.isalnum() or self.current == '_':
                     self.increment()

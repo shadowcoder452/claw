@@ -5,10 +5,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claw"
-version = "0.1.0"
+version = "0.1.1"
 description = "A programming language that compiles to the Scratch .sb3 format."
 requires-python = ">=3.10"
 dependencies = []
+
+[project.scripts]
+claw = "claw.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=9.1.1"]

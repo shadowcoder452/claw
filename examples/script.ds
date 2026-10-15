@@ -1,0 +1,11 @@
+// Work in progress
+
+fn add3(a, b, c) { 
+    a + b + c
+}
+
+
+fn main() {
+    a = 2
+    c = 3
+}

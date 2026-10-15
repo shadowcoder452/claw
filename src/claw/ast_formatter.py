@@ -13,7 +13,7 @@ def format_node(node, indent: int = 0) -> str:
             )
 
         case nodes.ExprStmt(expr=expr):
-            return format_node(expression, indent)
+            return format_node(expr, indent)
 
         case nodes.NumberExpr(value=value):
             return f"{prefix}Number: {value.value}"
@@ -62,7 +62,7 @@ def format_node(node, indent: int = 0) -> str:
             return result
 
         case _:
-            raise TypeError(f"Unknown AST node: {type(node).__name__}")
+            return f"{prefix}Unknown Node ({type(node).__name__})"
 
 
 def format_ast(functions: list[nodes.Function]) -> str:

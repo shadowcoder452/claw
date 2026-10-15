@@ -86,6 +86,6 @@ def test_comment():
 def test_unexpected_char():
     with pytest.raises(
         LexerError,
-        match=r"1:10: Unexpected character '@'",
+        match="1:10: Unexpected character '|'",
     ):
-        lex("74 + 1 * @")
+        lex("74 + 1 * |")

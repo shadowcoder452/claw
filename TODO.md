@@ -7,5 +7,6 @@
 - [x] Function
 - [x] AssignExpr
 - [x] Block
+- [x] ExprStmt
 - [ ] VarDeclStmt
 - [ ] ListDeclStmt
