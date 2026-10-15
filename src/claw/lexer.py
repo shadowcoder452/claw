@@ -10,7 +10,7 @@ class TokenType(Enum):
     Identifier = auto()
 
     # Keywords
-    Fn = auto()       # FunctionStmt
+    Fn = auto()       # Function
     If = auto()
     Else = auto()
     

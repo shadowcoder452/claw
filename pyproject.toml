@@ -1,0 +1,17 @@
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claw"
+version = "0.1.0"
+description = "A programming language that compiles to the Scratch .sb3 format."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=9.1.1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

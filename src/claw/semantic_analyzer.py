@@ -148,3 +148,10 @@ class SemanticAnalyzer:
     def visit_Block(self, node: Block):
         for statement in node.statements:
             self.visit(statement)
+            
+    def visit_IfStmt(self, node: IfStmt):
+        self.visit(node.condition)
+        self.visit(node.then_expr)
+        
+        if node.else_expr:
+            self.visit(node.else_expr)
