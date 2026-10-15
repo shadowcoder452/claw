@@ -1,7 +1,7 @@
 from __future__ import annotations
-from abstract import *
-from error_types import SemanticError, SemanticWarning
-from scratch_limits import *
+from .nodes import *
+from .error_types import SemanticError, SemanticWarning
+from .scratch_limits import *
 
 
 class Symbol:

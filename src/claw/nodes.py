@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from lexer import Token, TokenType
-from location import Span
+from .lexer import Token, TokenType
+from .location import Span
 
 @dataclass
 class Expression:
@@ -58,3 +58,13 @@ class Function(Statement):
 @dataclass
 class Block(Statement):
     statements: list[Expression | Statement]
+    
+@dataclass
+class VarDeclStmt(Statement):
+    name: IdentifierExpr
+    initializer: Expression
+    
+@dataclass
+class VarDeclStmt(Statement):
+    name: IdentifierExpr
+    initializer: Expression

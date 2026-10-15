@@ -1,8 +1,8 @@
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import Optional
-from location import Location, Span
-from error_types import LexerError
+from .location import Location, Span
+from .error_types import LexerError
 
 class TokenType(Enum):
     # Literals

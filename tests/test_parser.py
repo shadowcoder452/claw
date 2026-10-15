@@ -1,5 +1,5 @@
-from lexer import *
-from parser import *
+from claw.lexer import *
+from claw.parser import *
 import pytest
 
 

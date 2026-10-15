@@ -1,5 +1,5 @@
-from lexer import *
-from error_types import *
+from claw.lexer import *
+from claw.error_types import *
 import pytest
 
 

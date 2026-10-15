@@ -3,7 +3,9 @@
 - [x] BinaryOp
 - [x] IdentifierExpr
 - [x] CallExpr
-- [ ] IfStmt
+- [x] IfStmt
 - [x] Function
 - [x] AssignExpr
 - [x] Block
+- [ ] VarDeclStmt
+- [ ] ListDeclStmt

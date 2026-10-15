@@ -1,4 +1,4 @@
-from location import Span
+from .location import Span
 
 class Error(Exception):
     def __init__(self, span: Span, cause: str):

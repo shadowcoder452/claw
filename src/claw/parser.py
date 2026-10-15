@@ -1,6 +1,6 @@
-from lexer import Token, TokenType
-from error_types import ParserError
-from abstract import *
+from .lexer import Token, TokenType
+from .error_types import ParserError
+from .nodes import *
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {

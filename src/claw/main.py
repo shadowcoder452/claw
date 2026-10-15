@@ -1,8 +1,8 @@
-from lexer import Lexer
-from parser import Parser
-from semantic_analyzer import SemanticAnalyzer
+from .lexer import Lexer
+from .parser import Parser
+from .semantic_analyzer import SemanticAnalyzer
 from pprint import pprint
-from ast_formatter import format_ast
+from .ast_formatter import format_ast
 import sys
 """
 fn add(a, b)
