@@ -119,7 +119,7 @@ def test_unexpected_character_is_reported_and_lexing_continues():
         token(TokenType.Eof, "End of file"),
     ]
     assert errors == [
-        LexerError(Span(Location(0, 0), Location(0, 0)), "Unexpected character")
+        LexerError(Span(Location(0, 0), Location(0, 0)), "Unexpected character"),
     ]
 
 
@@ -127,5 +127,5 @@ def test_invalid_number_literal_is_reported_without_emitting_a_number():
     tokens, errors = lex("123b")
     assert tokens == [token(TokenType.Eof, "End of file")]
     assert errors == [
-        LexerError(Span(Location(0, 0), Location(0, 4)), "Invalid number literal")
+        LexerError(Span(Location(0, 0), Location(0, 4)), "Invalid number literal"),
     ]

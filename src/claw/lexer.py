@@ -48,7 +48,7 @@ SINGLE_CHAR_TOKENS = {
     ':': TokenType.Colon,
     '=': TokenType.Assign,
     '{': TokenType.LCurly,
-    '}': TokenType.RCurly
+    '}': TokenType.RCurly,
 }
 
 KEYWORDS = {
@@ -56,7 +56,7 @@ KEYWORDS = {
     "if": TokenType.If,
     "else": TokenType.Else,
     "var": TokenType.Var,
-    "return": TokenType.Return
+    "return": TokenType.Return,
 }
 
 @dataclass
