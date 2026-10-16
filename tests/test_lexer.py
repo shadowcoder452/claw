@@ -1,91 +1,131 @@
-from claw.lexer import *
-from claw.error_types import *
 import pytest
 
+from claw.errors import LexerError
+from claw.lexer import Lexer, Token, TokenType
+from claw.location import Location, Span
 
-def lex(src: str):
-    return Lexer(src).lex()
+
+def lex(source: str):
+    return Lexer(source).lex()
+
+
+def token(token_type: TokenType, value: str) -> Token:
+    return Token(token_type, value)
+
 
 def test_number():
-    assert lex("425") == [
-        Token(TokenType.Number, "425"),
-        Token(TokenType.Eof, "End of file"),
+    tokens, errors = lex("425")
+    assert tokens == [
+        token(TokenType.Number, "425"),
+        token(TokenType.Eof, "End of file"),
     ]
+    assert errors == []
 
 
-def test_whitespace():
-    assert lex("   \t  \t\t") == [
-        Token(TokenType.Eof, "End of file"),
-    ]
+def test_whitespace_only_source():
+    tokens, errors = lex("   \t  \t\t")
+    assert tokens == [token(TokenType.Eof, "End of file")]
+    assert errors == []
 
 
-def test_simple_expr():
-    assert lex("1 + 2") == [
-        Token(TokenType.Number, "1"),
-        Token(TokenType.Plus, "+"),
-        Token(TokenType.Number, "2"),
-        Token(TokenType.Eof, "End of file"),
-    ]
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            "1 + 2",
+            [
+                (TokenType.Number, "1"),
+                (TokenType.Plus, "+"),
+                (TokenType.Number, "2"),
+            ],
+        ),
+        (
+            "(5 - 2) * 3",
+            [
+                (TokenType.LParen, "("),
+                (TokenType.Number, "5"),
+                (TokenType.Minus, "-"),
+                (TokenType.Number, "2"),
+                (TokenType.RParen, ")"),
+                (TokenType.Mul, "*"),
+                (TokenType.Number, "3"),
+            ],
+        ),
+        (
+            "x = 10",
+            [
+                (TokenType.Identifier, "x"),
+                (TokenType.Assign, "="),
+                (TokenType.Number, "10"),
+            ],
+        ),
+        (
+            "0 < (2 == 0);",
+            [
+                (TokenType.Number, "0"),
+                (TokenType.Less, "<"),
+                (TokenType.LParen, "("),
+                (TokenType.Number, "2"),
+                (TokenType.Equal, "=="),
+                (TokenType.Number, "0"),
+                (TokenType.RParen, ")"),
+            ],
+        ),
+    ],
+)
+def test_tokenizes_expressions(source, expected):
+    tokens, errors = lex(source)
+    assert tokens == [*(token(kind, value) for kind, value in expected), token(TokenType.Eof, "End of file")]
+    assert errors == []
 
 
-def test_paren_expr():
-    assert lex("(5 - 2) * 3") == [
-        Token(TokenType.LParen, "("),
-        Token(TokenType.Number, "5"),
-        Token(TokenType.Minus, "-"),
-        Token(TokenType.Number, "2"),
-        Token(TokenType.RParen, ")"),
-        Token(TokenType.Mul, "*"),
-        Token(TokenType.Number, "3"),
-        Token(TokenType.Eof, "End of file"),
-    ]
-    
 def test_identifier():
-    assert lex("abcd") == [
-        Token(TokenType.Identifier, "abcd"),
-        Token(TokenType.Eof, "End of file"),
+    tokens, errors = lex("abcd")
+    assert tokens == [
+        token(TokenType.Identifier, "abcd"),
+        token(TokenType.Eof, "End of file"),
     ]
-    
-def test_semicolon():
-    assert lex(";;\n;;;") == [
-        Token(TokenType.Eof, "End of file")
+    assert errors == []
+
+
+def test_semicolons_are_ignored():
+    tokens, errors = lex(";;\n;;;")
+    assert tokens == [token(TokenType.Eof, "End of file")]
+    assert errors == []
+
+
+def test_single_character_token():
+    tokens, errors = lex("<")
+    assert tokens == [
+        token(TokenType.Less, "<"),
+        token(TokenType.Eof, "End of file"),
+    ]
+    assert errors == []
+
+
+def test_line_comment_is_ignored():
+    tokens, errors = lex("// test comment\n <")
+    assert tokens == [
+        token(TokenType.Less, "<"),
+        token(TokenType.Eof, "End of file"),
+    ]
+    assert errors == []
+
+
+def test_unexpected_character_is_reported_and_lexing_continues():
+    tokens, errors = lex("~ <")
+    assert tokens == [
+        token(TokenType.Less, "<"),
+        token(TokenType.Eof, "End of file"),
+    ]
+    assert errors == [
+        LexerError(Span(Location(0, 0), Location(0, 0)), "Unexpected character")
     ]
 
-def test_assignment():
-    assert lex("x = 10") == [
-        Token(TokenType.Identifier, "x"),
-        Token(TokenType.Assign, "="),
-        Token(TokenType.Number, "10"),
-        Token(TokenType.Eof, "End of file"),
-    ]
-    
-def test_single_char_token():
-    assert lex("<") == [
-        Token(TokenType.Less, "<"),
-        Token(TokenType.Eof, "End of file"),
-    ]
-    
-def test_paren_expr_comparison():
-    assert lex("0 < (2 == 0);") == [
-        Token(TokenType.Number, "0"),
-        Token(TokenType.Less, "<"),
-        Token(TokenType.LParen, "("),
-        Token(TokenType.Number, "2"),
-        Token(TokenType.Equal, "=="),
-        Token(TokenType.Number, "0"),
-        Token(TokenType.RParen, ")"),
-        Token(TokenType.Eof, "End of file"),
-    ]
 
-def test_comment():
-    assert lex("// test comment\n <") == [
-        Token(TokenType.Less, "<"),
-        Token(TokenType.Eof, "End of file"),
+def test_invalid_number_literal_is_reported_without_emitting_a_number():
+    tokens, errors = lex("123b")
+    assert tokens == [token(TokenType.Eof, "End of file")]
+    assert errors == [
+        LexerError(Span(Location(0, 0), Location(0, 4)), "Invalid number literal")
     ]
-
-def test_unexpected_char():
-    with pytest.raises(
-        LexerError,
-        match="1:10: Unexpected character '|'",
-    ):
-        lex("74 + 1 * |")

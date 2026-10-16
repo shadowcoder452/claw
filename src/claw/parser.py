@@ -1,6 +1,20 @@
 from .lexer import Token, TokenType
-from .error_types import ParserError
-from .nodes import *
+from .errors import ParserError
+from .location import Span
+from .nodes import (
+    AssignExpr,
+    BinaryOp,
+    Block,
+    CallExpr,
+    ExprStmt,
+    Expression,
+    Function,
+    IdentifierExpr,
+    IfStmt,
+    NumberExpr,
+    Statement,
+    VarDeclStmt,
+)
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
@@ -21,6 +35,7 @@ class Parser:
     def __init__(self, tokens: list[Token]):
         self.tokens = tokens
         self.cursor = 0
+        self.errors: list[ParserError] = []
         
     @property
     def current(self) -> Token:
@@ -48,17 +63,31 @@ class Parser:
             return self.tokens[index]
         return self.tokens[-1] # EOF
     
-    def parse(self) -> list[Statement]:
-        """Parse the entire program."""
+    def parse(self) -> tuple[list[Statement], list[ParserError]]:
         statements = []
 
         while self.current._type != TokenType.Eof:
-            if self.current._type == TokenType.Fn:
-                statements.append(self.parse_function())
-            else:
-                statements.append(self.parse_top_level())
-                
-        return statements
+            start = self.cursor
+
+            try:
+                if self.current._type == TokenType.Fn:
+                    statements.append(self.parse_function())
+                else:
+                    statements.append(self.parse_top_level())
+            except ParserError as err:
+                self.errors.append(err)
+                self.synchronize_top_level()
+
+            if start == self.cursor and self.current._type != TokenType.Eof:
+                self.consume()
+
+        return statements, self.errors
+
+    def synchronize_top_level(self):
+        while self.current._type != TokenType.Eof:
+            if self.current._type in (TokenType.Fn, TokenType.Var):
+                return
+            self.consume()
     
     def parse_expression(self) -> Expression:
         left = self.parse_primary()
@@ -70,12 +99,20 @@ class Parser:
         return left
     
     def parse_top_level(self) -> Statement:
-        
-        
-        raise ParserError(
-            Span(self.current.location, self.current.location),
-            f"Expected a declaration at the top level, got `{self.current.value}`"
-        )
+        match self.current._type:
+            case TokenType.Var:
+                start = self.consume().location
+                
+                ident = self.consume_assert(TokenType.Identifier, f"Expected identifier")
+                ident_expr = IdentifierExpr(Span(start, self.current.location), ident)
+                
+                return VarDeclStmt(Span(start, self.current.location), ident_expr)
+                
+            case _:
+                raise ParserError(
+                    Span(self.current.location, self.current.location),
+                    f"Expected a declaration at the top level"
+                )
     
     def parse_primary(self) -> Expression:
         match self.current._type:
@@ -83,7 +120,7 @@ class Parser:
                 start = self.consume().location
                 expr = self.parse_expression()
                 if self.current._type != TokenType.RParen:
-                    raise ParserError(Span(start, self.current.location), f"Expected `)`, got {self.current.value}")
+                    raise ParserError(Span(start, self.current.location), f"Expected `)`")
                 self.consume()
                 return expr
             

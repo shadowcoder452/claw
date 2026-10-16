@@ -1,11 +1,14 @@
 // Work in progress
 
 fn add3(a, b, c) { 
-    return a + b + c
+    a + b + c
 }
 
+var a
+var c
 
 fn main() {
+    hello
     a = 2
     c = 3
 }

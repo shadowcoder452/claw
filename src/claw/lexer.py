@@ -2,7 +2,7 @@ from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import Optional
 from .location import Location, Span
-from .error_types import LexerError
+from .errors import LexerError
 
 class TokenType(Enum):
     # Literals
@@ -68,6 +68,7 @@ class Token:
 class Lexer:
     def __init__(self, source: str):
         self.source = source
+        self.errors: List[LexerError] = []
         self.tokens: list[Token] = []
         self.cursor = 0
         self.row = 0
@@ -120,18 +121,24 @@ class Lexer:
             
             # recognize numbers
             if self.current.isdigit():
-                start = self.cursor
+                start = Location(self.row, self.column)
+                start_idx = self.cursor
+                
                 while self.current.isdigit():
                     self.increment()
                 
                 # prevents trailing identifiers (123a)
-                if self.current.isalpha() or self.current == "_":
-                    raise LexerError(
-                        Span(Location(self.row, self.column), Location(self.row, self.column)),
+                if self.current.isalpha() or self.current in ('_', '@'):
+                    while self.current.isalpha() or self.current in ('_', '@'):
+                        self.increment()
+                    
+                    self.errors.append(LexerError(
+                        Span(start, Location(self.row, self.column)),
                         "Invalid number literal"
-                    )
+                    ))
+                    continue
                 
-                self.push_token(TokenType.Number, self.source[start:self.cursor])
+                self.push_token(TokenType.Number, self.source[start_idx:self.cursor])
                 continue
             
             # Check for == before single characters
@@ -150,6 +157,10 @@ class Lexer:
             # Scratch reporters prefixed with '@'
             if self.current.isalpha() or self.current in ('_', '@'):
                 start = self.cursor
+                
+                if self.current == '@':
+                    self.increment()
+                
                 while self.current.isalnum() or self.current == '_':
                     self.increment()
                     
@@ -160,11 +171,12 @@ class Lexer:
                 self.push_token(token_type, word)
                 continue
 
-            raise LexerError(
+            self.errors.append(LexerError(
                 Span(Location(self.row, self.column), Location(self.row, self.column)),
-                f"Unexpected character '{self.current}'"
-            )
+                "Unexpected character"
+            ))
+            self.increment()
 
         # add EOF token
         self.tokens.append(Token(TokenType.Eof, "End of file", Location(self.row, self.column)))
-        return self.tokens
+        return (self.tokens, self.errors)

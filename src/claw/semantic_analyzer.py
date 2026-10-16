@@ -1,7 +1,16 @@
 from __future__ import annotations
-from .nodes import *
-from .error_types import SemanticError, SemanticWarning
-from .scratch_limits import *
+from .nodes import (
+    AssignExpr,
+    BinaryOp,
+    Block,
+    CallExpr,
+    ExprStmt,
+    IdentifierExpr,
+    IfStmt,
+    NumberExpr,
+)
+from .errors import SemanticError, SemanticWarning
+from .scratch_limits import MAX_SAFE_INTEGER
 
 
 class Symbol:
@@ -54,13 +63,22 @@ class SemanticAnalyzer:
     def __init__(self, ast: list[FunctionStmt]):
         self.symbols = SymbolTable()
         self.ast = ast
+        self.errors: list[SemanticError] = []
         self.warnings: list[SemanticWarning] = []
 
     def analyze(self):
-        for fn in self.ast:
-            self.visit(fn)
-
+        for statement in self.ast:
+            self.visit(statement)
+        
+        return (self.warnings, self.errors)
+            
     def visit(self, node):
+        try:
+            self._visit(node)
+        except SemanticError as err:
+            self.errors.append(err)
+
+    def _visit(self, node):
         method_name = f"visit_{type(node).__name__}"
         method = getattr(self, method_name, None)
 

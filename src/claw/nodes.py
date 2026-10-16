@@ -57,14 +57,12 @@ class Function(Statement):
     
 @dataclass
 class Block(Statement):
-    statements: list[Expression | Statement]
+    statements: list[Statement]
     
 @dataclass
 class VarDeclStmt(Statement):
     name: IdentifierExpr
-    initializer: Expression
     
 @dataclass
-class VarDeclStmt(Statement):
+class ListDeclStmt(Statement):
     name: IdentifierExpr
-    initializer: Expression
