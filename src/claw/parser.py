@@ -48,20 +48,17 @@ class Parser:
             return self.tokens[index]
         return self.tokens[-1] # EOF
     
-    def parse(self) -> list[Function]:
+    def parse(self) -> list[Statement]:
         """Parse the entire program."""
-        functions = []
+        statements = []
 
         while self.current._type != TokenType.Eof:
             if self.current._type == TokenType.Fn:
-                functions.append(self.parse_function())
+                statements.append(self.parse_function())
             else:
-                raise ParserError(
-                    Span(self.current.location, self.current.location),
-                    "Top-level expressions are not allowed"
-                )
-
-        return functions
+                statements.append(self.parse_top_level())
+                
+        return statements
     
     def parse_expression(self) -> Expression:
         left = self.parse_primary()
@@ -72,13 +69,21 @@ class Parser:
 
         return left
     
+    def parse_top_level(self) -> Statement:
+        
+        
+        raise ParserError(
+            Span(self.current.location, self.current.location),
+            f"Expected a declaration at the top level, got `{self.current.value}`"
+        )
+    
     def parse_primary(self) -> Expression:
         match self.current._type:
             case TokenType.LParen:
                 start = self.consume().location
                 expr = self.parse_expression()
                 if self.current._type != TokenType.RParen:
-                    raise ParserError(Span(start, self.current.location), f"Expected ')' but got {self.current._type}")
+                    raise ParserError(Span(start, self.current.location), f"Expected `)`, got {self.current.value}")
                 self.consume()
                 return expr
             
@@ -164,7 +169,7 @@ class Parser:
                 self.consume()
         
         start = ident.span.start
-        end = self.consume_assert(TokenType.RParen, "Expected ')' after function arguments").location
+        end = self.consume_assert(TokenType.RParen, "Expected `)` after function arguments").location
         
         return CallExpr(Span(start, end), ident, arguments)
 
@@ -193,7 +198,7 @@ class Parser:
         ):
             statements.append(self.parse_statement())
 
-        end = self.consume_assert(TokenType.RCurly, "Expected '}' before end of file").location
+        end = self.consume_assert(TokenType.RCurly, "Expected `}` before end of file").location
 
         return Block(
             Span(start, end),
@@ -203,7 +208,7 @@ class Parser:
     def parse_function(self) -> Function:
         start = self.consume().location
         name = self.consume_assert(TokenType.Identifier, "Expected function name")
-        self.consume_assert(TokenType.LParen, "Expected '(' after function name")
+        self.consume_assert(TokenType.LParen, "Expected `(` after function name")
 
         # Parse parameters
         parameters: list[Token] = []
@@ -222,12 +227,12 @@ class Parser:
                 if self.current._type != TokenType.Comma:
                     raise ParserError(
                         Span(self.current.location, self.current.location),
-                        "Expected ',' after parameter"
+                        "Expected `,` after parameter"
                     )
 
                 self.consume()
 
-        self.consume_assert(TokenType.RParen, "Expected ')' after parameters")
+        self.consume_assert(TokenType.RParen, "Expected `)` after parameters")
         
         body = self.parse_statement()
         end = body.span.end

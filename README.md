@@ -5,6 +5,13 @@ A programming language that compiles to Scratch .sb3 format.
 Claw is no where close to being finished. The codegen has not been added meaning that no .sb3 is generated yet.
 
 
+### Installation
+Run the command below in the project root. The python pip module must be installed.
+```
+python -m pip install .
+```
+
+
 ### Example showing syntax idea
 ```js
 

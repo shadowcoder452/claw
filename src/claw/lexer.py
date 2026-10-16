@@ -13,6 +13,8 @@ class TokenType(Enum):
     Fn = auto()       # Function
     If = auto()
     Else = auto()
+    Var = auto()
+    Return = auto()
     
     LParen = auto()
     RParen = auto()
@@ -53,6 +55,8 @@ KEYWORDS = {
     "fn": TokenType.Fn,
     "if": TokenType.If,
     "else": TokenType.Else,
+    "var": TokenType.Var,
+    "return": TokenType.Return
 }
 
 @dataclass
@@ -143,7 +147,7 @@ class Lexer:
                 self.increment()
                 continue
             
-            # recognize identifiers
+            # Scratch reporters prefixed with '@'
             if self.current.isalpha() or self.current in ('_', '@'):
                 start = self.cursor
                 while self.current.isalnum() or self.current == '_':

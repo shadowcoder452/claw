@@ -1,7 +1,7 @@
 // Work in progress
 
 fn add3(a, b, c) { 
-    a + b + c
+    return a + b + c
 }
 
 
