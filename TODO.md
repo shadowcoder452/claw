@@ -8,5 +8,4 @@
 - [x] AssignExpr
 - [x] Block
 - [x] ExprStmt
-- [ ] VarDeclStmt
-- [ ] ListDeclStmt
+- [x] VarDeclStmt

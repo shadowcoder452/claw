@@ -184,4 +184,4 @@ def test_parser_collects_syntax_errors():
     assert statements == []
     assert len(errors) == 1
     assert isinstance(errors[0], ParserError)
-    assert "Unexpected token" in errors[0].cause
+    assert "unexpected token" in errors[0].cause

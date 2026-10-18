@@ -1,6 +1,6 @@
 from .lexer import Token, TokenType
 from .errors import ParserError
-from .location import Span
+from .location import Span, Location
 from .nodes import (
     AssignExpr,
     BinaryOp,
@@ -53,7 +53,7 @@ class Parser:
     
     def consume_assert(self, expected: TokenType, error_message: str) -> Token:
         token = self.consume()
-        if token._type != expected:
+        if token._type is not expected:
             raise ParserError(Span(token.location, token.location), error_message)
         return token
     
@@ -61,16 +61,16 @@ class Parser:
         index = self.cursor + offset
         if index < len(self.tokens):
             return self.tokens[index]
-        return self.tokens[-1] # EOF
+        return self.tokens[-1]
     
     def parse(self) -> tuple[list[Statement], list[ParserError]]:
         statements = []
 
-        while self.current._type != TokenType.Eof:
+        while self.current._type is not TokenType.Eof:
             start = self.cursor
 
             try:
-                if self.current._type == TokenType.Fn:
+                if self.current._type is TokenType.Fn:
                     statements.append(self.parse_function())
                 else:
                     statements.append(self.parse_top_level())
@@ -78,13 +78,13 @@ class Parser:
                 self.errors.append(err)
                 self.synchronize_top_level()
 
-            if start == self.cursor and self.current._type != TokenType.Eof:
+            if start == self.cursor and self.current._type is not TokenType.Eof:
                 self.consume()
 
         return statements, self.errors
 
     def synchronize_top_level(self):
-        while self.current._type != TokenType.Eof:
+        while self.current._type is not TokenType.Eof:
             if self.current._type in (TokenType.Fn, TokenType.Var):
                 return
             self.consume()
@@ -103,7 +103,7 @@ class Parser:
             case TokenType.Var:
                 start = self.consume().location
                 
-                ident = self.consume_assert(TokenType.Identifier, f"Expected identifier")
+                ident = self.consume_assert(TokenType.Identifier, f"expected identifier")
                 ident_expr = IdentifierExpr(Span(start, self.current.location), ident)
                 
                 return VarDeclStmt(Span(start, self.current.location), ident_expr)
@@ -111,7 +111,7 @@ class Parser:
             case _:
                 raise ParserError(
                     Span(self.current.location, self.current.location),
-                    f"Expected a declaration at the top level"
+                    f"expected a declaration at the top level"
                 )
     
     def parse_primary(self) -> Expression:
@@ -119,20 +119,24 @@ class Parser:
             case TokenType.LParen:
                 start = self.consume().location
                 expr = self.parse_expression()
-                if self.current._type != TokenType.RParen:
-                    raise ParserError(Span(start, self.current.location), f"Expected `)`")
+                if self.current._type is not TokenType.RParen:
+                    raise ParserError(Span(start, self.current.location), f"expected closing parenthesis")
                 self.consume()
                 return expr
             
             case TokenType.Number:
                 token = self.consume()
-                return NumberExpr(Span(token.location, token.location), token)
+                start = token.location
+                end = Location(start.row, start.column + len(token.value))
+                return NumberExpr(Span(start, end), token)
             
             case TokenType.Identifier:
                 token = self.consume()
-                ident = IdentifierExpr(Span(token.location, token.location), token)
+                start = token.location
+                end = Location(start.row, start.column + len(token.value))
+                ident = IdentifierExpr(Span(start, end), token)
                 
-                if self.current._type != TokenType.LParen:
+                if self.current._type is not TokenType.LParen:
                     return ident
                 
                 return self.parse_call(ident)
@@ -143,7 +147,7 @@ class Parser:
             case _:
                 raise ParserError(
                     Span(self.current.location, self.current.location),
-                    f"Unexpected token: {self.current.value}"
+                    f"unexpected token {self.current.value}"
                 )
     
     def parse_statement(self) -> Statement:
@@ -152,11 +156,11 @@ class Parser:
                 return self.parse_if_statement()
             
             case TokenType.Identifier:
-                if self.peek()._type == TokenType.Assign:
+                if self.peek()._type is TokenType.Assign:
                     token = self.consume()
-                    ident = IdentifierExpr(Span(token.location, token.location), token)
+                    ident = IdentifierExpr(Span(token.location, self.current.location), token)
 
-                    self.consume()  # Consume '='
+                    self.consume()
                     expr = self.parse_expression()
 
                     return ExprStmt(
@@ -185,7 +189,7 @@ class Parser:
         then_expr = self.parse_statement()
         else_expr = None
         
-        if self.current._type == TokenType.Else:
+        if self.current._type is TokenType.Else:
             self.consume()
             else_expr = self.parse_statement()
         
@@ -202,17 +206,16 @@ class Parser:
             TokenType.Eof
         ):
             arguments.append(self.parse_expression())
-            if self.current._type == TokenType.Comma:
+            if self.current._type is TokenType.Comma:
                 self.consume()
         
         start = ident.span.start
-        end = self.consume_assert(TokenType.RParen, "Expected `)` after function arguments").location
+        end = self.consume_assert(TokenType.RParen, "expected closing parenthesis after function arguments").location
         
         return CallExpr(Span(start, end), ident, arguments)
 
     def parse_unary(self) -> Expression:
-        # Stop if no unary minus
-        if self.current._type != TokenType.Minus:
+        if self.current._type is not TokenType.Minus:
             return self.parse_primary()
         
         start = self.consume().location
@@ -235,7 +238,7 @@ class Parser:
         ):
             statements.append(self.parse_statement())
 
-        end = self.consume_assert(TokenType.RCurly, "Expected `}` before end of file").location
+        end = self.consume_assert(TokenType.RCurly, "expected closing brace before end of file").location
 
         return Block(
             Span(start, end),
@@ -244,32 +247,31 @@ class Parser:
             
     def parse_function(self) -> Function:
         start = self.consume().location
-        name = self.consume_assert(TokenType.Identifier, "Expected function name")
-        self.consume_assert(TokenType.LParen, "Expected `(` after function name")
-
-        # Parse parameters
+        name = self.consume_assert(TokenType.Identifier, "expected function name")
+        self.consume_assert(TokenType.LParen, "expected opening parenthesis after function name")
+        
         parameters: list[Token] = []
 
-        if self.current._type != TokenType.RParen:
+        if self.current._type is not TokenType.RParen:
             while True:
                 param = self.consume_assert(
                     TokenType.Identifier,
-                    "Expected parameter name"
+                    "expected parameter name"
                 )
                 parameters.append(param)
 
-                if self.current._type == TokenType.RParen:
+                if self.current._type is TokenType.RParen:
                     break
 
-                if self.current._type != TokenType.Comma:
+                if self.current._type is not TokenType.Comma:
                     raise ParserError(
                         Span(self.current.location, self.current.location),
-                        "Expected `,` after parameter"
+                        "expected comma after parameter"
                     )
 
                 self.consume()
 
-        self.consume_assert(TokenType.RParen, "Expected `)` after parameters")
+        self.consume_assert(TokenType.RParen, "expected closing parenthesis after parameters")
         
         body = self.parse_statement()
         end = body.span.end
@@ -299,13 +301,13 @@ class Parser:
             next_op = self.consume()
             right = self.parse_binary_op(right, next_op)
 
-        if op._type == TokenType.Assign:
+        if op._type is TokenType.Assign:
             if not isinstance(left, IdentifierExpr):
                 raise ParserError(
                     left.span,
-                    "Left side of assignment must be an identifier"
+                    "left side of assignment must be an identifier"
                 )
-
+            
             return AssignExpr(Span(left.span.start, right.span.end), left, right)
 
         return BinaryOp(Span(left.span.start, right.span.end), left, op, right)

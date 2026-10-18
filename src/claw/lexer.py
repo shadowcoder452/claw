@@ -72,7 +72,7 @@ class Lexer:
         self.tokens: list[Token] = []
         self.cursor = 0
         self.row = 0
-        self.column = -1
+        self.column = 0
         
     @property
     def current(self) -> str:
@@ -94,15 +94,15 @@ class Lexer:
             self.column += 1
         self.cursor += 1
 
-    def push_token(self, token_type: TokenType, value: str):
+    def push_token(self, token_type: TokenType, value: str, location: Location):
         token = Token(
             token_type,
             value,
-            Location(self.row, self.column - len(value) + 1),
+            location,
         )
         self.tokens.append(token)
     
-    def lex(self) -> list[Token]:
+    def lex(self) -> tuple[list[Token], list[LexerError]]:
         self.tokens.clear()
         self.cursor = 0
         self.row = 0
@@ -117,6 +117,36 @@ class Lexer:
             if self.current == '/' and self.peek() == '/':
                 while self.current != '\n' and self.current != '\0':
                     self.increment()
+                continue
+            
+            # Check for == before single characters
+            if self.current == '=' and self.peek() == '=':
+                self.push_token(TokenType.Equal, "==", Location(self,row, self.column))
+                self.increment()
+                self.increment()
+                continue
+            
+            # recognize operators and parentheses
+            if token_type := SINGLE_CHAR_TOKENS.get(self.current):
+                self.push_token(token_type, self.current, Location(self.row, self.column))
+                self.increment()
+                continue
+            
+            # Scratch reporters prefixed with '@'
+            if self.current.isalpha() or self.current in ('_', '@'):
+                start = Location(self.row, self.column)
+                start_idx = self.cursor
+
+                if self.current == '@':
+                    self.increment()
+
+                while self.current.isalnum() or self.current == '_':
+                    self.increment()
+
+                word = self.source[start_idx:self.cursor]
+                token_type = KEYWORDS.get(word, TokenType.Identifier)
+
+                self.push_token(token_type, word, start)
                 continue
             
             # recognize numbers
@@ -134,49 +164,19 @@ class Lexer:
                     
                     self.errors.append(LexerError(
                         Span(start, Location(self.row, self.column)),
-                        "Invalid number literal"
+                        "invalid number literal"
                     ))
                     continue
                 
-                self.push_token(TokenType.Number, self.source[start_idx:self.cursor])
-                continue
-            
-            # Check for == before single characters
-            if self.current == '=' and self.peek() == '=':
-                self.push_token(TokenType.Equal, "==")
-                self.increment()
-                self.increment()
-                continue
-            
-            # recognize operators and parentheses
-            if token_type := SINGLE_CHAR_TOKENS.get(self.current):
-                self.push_token(token_type, self.current)
-                self.increment()
-                continue
-            
-            # Scratch reporters prefixed with '@'
-            if self.current.isalpha() or self.current in ('_', '@'):
-                start = self.cursor
-                
-                if self.current == '@':
-                    self.increment()
-                
-                while self.current.isalnum() or self.current == '_':
-                    self.increment()
-                    
-                word = self.source[start:self.cursor]
-                
-                token_type = KEYWORDS.get(word, TokenType.Identifier)
-                    
-                self.push_token(token_type, word)
+                self.push_token(TokenType.Number, self.source[start_idx:self.cursor], start)
                 continue
 
             self.errors.append(LexerError(
                 Span(Location(self.row, self.column), Location(self.row, self.column)),
-                "Unexpected character"
+                "unexpected character"
             ))
             self.increment()
 
         # add EOF token
         self.tokens.append(Token(TokenType.Eof, "End of file", Location(self.row, self.column)))
-        return (self.tokens, self.errors)
+        return self.tokens, self.errors

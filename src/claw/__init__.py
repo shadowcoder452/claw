@@ -5,7 +5,6 @@ from .errors import (
     LexerError,
     ParserError,
     SemanticError,
-    SemanticWarning,
     display_error,
 )
 from .lexer import Lexer, Token, TokenType
@@ -45,7 +44,6 @@ __all__ = [
     "ParserError",
     "SemanticAnalyzer",
     "SemanticError",
-    "SemanticWarning",
     "Statement",
     "Token",
     "TokenType",

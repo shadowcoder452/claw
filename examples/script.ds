@@ -5,10 +5,9 @@ fn add3(a, b, c) {
 }
 
 var a
-var c
+var test_var
 
 fn main() {
-    hello
     a = 2
-    c = 3
+    test_var = 3412
 }

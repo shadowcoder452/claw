@@ -17,10 +17,6 @@ class LexerError(Error): pass
 class ParserError(Error): pass
 class SemanticError(Error): pass
 
-class SemanticWarning(Error):
-    def __str__(self):
-        return f"{YELLOW}warning:{RESET} {self.span.start.row + 1}:{self.span.start.column + 1}: {self.cause}"
-
 def display_error(error: Error, src: str):
     lines = src.splitlines()
     start = error.span.start
@@ -30,11 +26,12 @@ def display_error(error: Error, src: str):
 
     if start.row >= len(lines):
         return
+    
+    padding = len(str(min(end.row + 1, len(lines))))
 
     for row in range(start.row, min(end.row + 1, len(lines))):
         line = lines[row]
         line_num = row + 1
-        padding = len(str(line_num))
 
         print(f"{YELLOW}{line_num:>{padding}} |{RESET} {line}")
 

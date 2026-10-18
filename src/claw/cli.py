@@ -8,7 +8,7 @@ import sys
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("Expected exactly 1 argument, main <file>")
+        print("expected one file path")
         sys.exit(1)
     
     try:
@@ -32,12 +32,7 @@ def main() -> int:
             return 2
         
         analyzer = SemanticAnalyzer(ast)
-        warnings, errors = analyzer.analyze()
-        
-        if warnings:
-            for wrn in warnings:
-                display_error(wrn, source)
-            return 3        
+        errors = analyzer.analyze() 
 
         if errors:
             for err in errors:
@@ -48,4 +43,4 @@ def main() -> int:
         return 0
     
     except FileNotFoundError:
-        print("File not found")
+        print("file not found")

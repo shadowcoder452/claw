@@ -62,7 +62,7 @@ def format_node(node, indent: int = 0) -> str:
             return result
 
         case _:
-            return f"{prefix}Unknown Node ({type(node).__name__})"
+            return f"{prefix}unknown node {type(node).__name__}"
 
 
 def format_ast(functions: list[nodes.Function]) -> str:

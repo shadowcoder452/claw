@@ -62,7 +62,3 @@ class Block(Statement):
 @dataclass
 class VarDeclStmt(Statement):
     name: IdentifierExpr
-    
-@dataclass
-class ListDeclStmt(Statement):
-    name: IdentifierExpr

@@ -21,6 +21,7 @@ python -m pip install .
 import "std.math.cw"
 
 // Variables declared at the top level can be accessed throughout the sprite
+// Variables local to the scope might be one of the last features to be implemented
 var x_pos
 var y_pos
 var dir
