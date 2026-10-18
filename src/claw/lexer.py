@@ -121,7 +121,7 @@ class Lexer:
             
             # Check for == before single characters
             if self.current == '=' and self.peek() == '=':
-                self.push_token(TokenType.Equal, "==", Location(self,row, self.column))
+                self.push_token(TokenType.Equal, "==", Location(self.row, self.column))
                 self.increment()
                 self.increment()
                 continue
