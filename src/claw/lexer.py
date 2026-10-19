@@ -32,7 +32,8 @@ class TokenType(Enum):
     Greater = auto()  # >
     Equal = auto()    # ==
     Assign = auto()   # =
-    
+
+    Newline = auto()
     Eof = auto()
     
 SINGLE_CHAR_TOKENS = {
@@ -49,6 +50,8 @@ SINGLE_CHAR_TOKENS = {
     '=': TokenType.Assign,
     '{': TokenType.LCurly,
     '}': TokenType.RCurly,
+    '\n': TokenType.Newline,
+    ';': TokenType.Newline,
 }
 
 KEYWORDS = {
@@ -68,7 +71,7 @@ class Token:
 class Lexer:
     def __init__(self, source: str):
         self.source = source
-        self.errors: List[LexerError] = []
+        self.errors: list[LexerError] = []
         self.tokens: list[Token] = []
         self.cursor = 0
         self.row = 0
@@ -87,7 +90,7 @@ class Lexer:
         return '\0'
 
     def increment(self):
-        if self.current == '\n' or self.current == ';':
+        if self.current == '\n':
             self.row += 1
             self.column = 0
         else:
@@ -109,14 +112,23 @@ class Lexer:
         self.column = 0
         
         while self.current != '\0':
-            # skip whitespace
-            if self.current.isspace() or self.current == ';':
+            # Add newline tokens
+            if self.current == '\n' or self.current == ';':
+                value = "newline" if self.current == '\n' else self.current
+                self.push_token(SINGLE_CHAR_TOKENS.get(self.current), value, Location(self.row, self.column))
                 self.increment()
                 continue
-            
+
+            # skip comments
             if self.current == '/' and self.peek() == '/':
                 while self.current != '\n' and self.current != '\0':
                     self.increment()
+                self.increment()
+                continue
+
+            # skip whitespace
+            if self.current.isspace():
+                self.increment()
                 continue
             
             # Check for == before single characters

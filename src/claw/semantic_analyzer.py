@@ -14,7 +14,7 @@ from .nodes import (
     NumberExpr,
     VarDeclStmt,
 )
-from .errors import SemanticError
+from .errors import SemanticError, Error
 
 
 class Symbol:
@@ -86,10 +86,10 @@ class SemanticAnalyzer:
         method = getattr(self, method_name, None)
 
         if method is None:
-            raise SemanticError(
+            raise Error(
                 node.span,
-                f"internal semantic analyzer "
-                f"has no visitor for {type(node).__name__}",
+                f"[Internal Exception] semantic analyzer "
+                f"has no visitor for `{type(node).__name__}`",
             )
 
         return method(node)
@@ -102,7 +102,7 @@ class SemanticAnalyzer:
 
         error = self.symbols.assign(
             Function(parameters),
-            node.name,
+            node.name.value.value,
         )
         
         if error is SymbolTableError.FuncRedeclared:

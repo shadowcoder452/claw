@@ -1,13 +1,13 @@
 // Work in progress
 
 fn add3(a, b, c) { 
-    a + b + c
+    return a + b + c
 }
 
 var a
 var test_var
 
 fn main() {
-    a = 2
+    a = add3(1, 2, 4)
     test_var = 3412
 }

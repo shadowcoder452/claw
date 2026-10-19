@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .lexer import Token, TokenType
 from .location import Span
 
@@ -51,8 +51,8 @@ class IfStmt(Statement):
 
 @dataclass
 class Function(Statement):
-    name: str
-    parameters: list[Token]
+    name: IdentifierExpr
+    parameters: list[IdentifierExpr]
     body: Statement
     
 @dataclass
@@ -62,3 +62,7 @@ class Block(Statement):
 @dataclass
 class VarDeclStmt(Statement):
     name: IdentifierExpr
+
+@dataclass
+class ReturnStmt(Statement):
+    expr: Expression | None = field(default=None)
