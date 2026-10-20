@@ -60,7 +60,7 @@ def test_whitespace_only_source():
             ],
         ),
         (
-            "0 < (2 == 0);",
+            "0 < (2 == 0)",
             [
                 (TokenType.Number, "0"),
                 (TokenType.Less, "<"),
@@ -87,10 +87,19 @@ def test_identifier():
     ]
     assert errors == []
 
+def test_keyword():
+    tokens, errors = lex("return")
+    assert tokens == [
+        token(TokenType.Return, "return"),
+        token(TokenType.Eof, "End of file"),
+    ]
+    assert errors == []
 
-def test_semicolons_are_ignored():
-    tokens, errors = lex(";;\n;;;")
-    assert tokens == [token(TokenType.Eof, "End of file")]
+
+
+def test_semicolons_emit_newlines():
+    tokens, errors = lex(";;;;;")
+    assert tokens == [*(token(TokenType.Newline, ";") for _ in range(5)),token(TokenType.Eof, "End of file")]
     assert errors == []
 
 

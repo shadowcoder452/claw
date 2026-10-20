@@ -12,6 +12,7 @@ from claw.nodes import (
     IdentifierExpr,
     IfStmt,
     NumberExpr,
+    ReturnStmt,
 )
 from claw.parser import Parser
 
@@ -130,18 +131,18 @@ def test_function_with_parameters():
     assert not errors
     function = statements[0]
     assert isinstance(function, Function)
-    assert function.name == "add"
-    assert [parameter.value for parameter in function.parameters] == ["a", "b"]
-    assert function.body.op.value == "+"
-    assert function.body.left.value.value == "a"
-    assert function.body.right.value.value == "b"
+    assert function.name.value.value == "add"
+    assert [parameter.value.value for parameter in function.parameters] == ["a", "b"]
+    assert function.body.expr.op.value == "+"
+    assert function.body.expr.left.value.value == "a"
+    assert function.body.expr.right.value.value == "b"
 
 
 def test_function_without_parameters():
     statements, errors = parse("fn answer() 42")
     assert not errors
     function = statements[0]
-    assert function.name == "answer"
+    assert function.name.value.value == "answer"
     assert function.parameters == []
     assert number_value(function.body.expr) == "42"
 
@@ -149,7 +150,7 @@ def test_function_without_parameters():
 def test_multiple_functions():
     statements, errors = parse("fn add(a, b) a + b\nfn sub(a, b) a - b")
     assert not errors
-    assert [function.name for function in statements] == ["add", "sub"]
+    assert [function.name.value.value for function in statements] == ["add", "sub"]
 
 
 @pytest.mark.parametrize("source", ["-5", "-x", "-(2 + 3)", "--5"])
@@ -167,6 +168,11 @@ def test_empty_block():
     assert isinstance(function.body, Block)
     assert function.body.statements == []
 
+def test_return_statement():
+    statements, errors = parse("fn test() return 42")
+    assert not errors
+    function = statements[0]
+    assert isinstance(function.body, ReturnStmt)
 
 def test_assignment_expression():
     expression = parse_expression("x = 42")

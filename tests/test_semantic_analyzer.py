@@ -94,7 +94,7 @@ def test_assigning_to_function_is_reported():
 def test_redeclaring_function_is_reported():
     _, errors = analyze("fn work() {} fn work() {}")
 
-    assert error_causes(errors) == ["cannot redeclare function work"]
+    assert error_causes(errors) == ["cannot redeclare function `work`"]
 
 
 def test_analysis_continues_after_an_error():

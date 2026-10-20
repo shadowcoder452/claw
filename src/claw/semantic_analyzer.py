@@ -13,6 +13,7 @@ from .nodes import (
     IfStmt,
     NumberExpr,
     VarDeclStmt,
+    ReturnStmt,
 )
 from .errors import SemanticError, Error
 
@@ -94,26 +95,27 @@ class SemanticAnalyzer:
 
         return method(node)
 
-    def visit_Function(self, node):
-        parameters = [param.value for param in node.parameters]
+    def visit_Function(self, node: Function):
+        parameters = [param.value.value for param in node.parameters]
+        name = node.name.value.value
 
         if len(parameters) != len(set(parameters)):
             self.errors.append(SemanticError(node.span, "duplicate parameter"))
 
         error = self.symbols.assign(
             Function(parameters),
-            node.name.value.value,
+            name,
         )
         
         if error is SymbolTableError.FuncRedeclared:
             raise SemanticError(
                 node.span,
-                f"cannot redeclare function {node.name}",
+                f"cannot redeclare function `{name}`",
             )
         elif error is SymbolTableError.VarRedeclaredAsFunc:
             raise SemanticError(
                 node.span,
-                f"cannot redeclare variable {node.name} as function",
+                f"cannot redeclare variable `{name}` as function",
             )
 
         old_symbols = self.symbols
@@ -211,3 +213,6 @@ class SemanticAnalyzer:
             )
 
         self.symbols.assign(Variable(), name)
+
+    def visit_ReturnStmt(self, node: ReturnStmt):
+        self.visit(node.expr)
