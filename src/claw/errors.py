@@ -1,6 +1,6 @@
 from .location import Span
 from dataclasses import dataclass
-from .ansi import BOLD, YELLOW, RED, RESET
+from ._ansi import BOLD, YELLOW, RED, RESET
 
 @dataclass
 class Error(Exception):

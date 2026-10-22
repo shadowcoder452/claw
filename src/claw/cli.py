@@ -4,7 +4,7 @@ from .semantic_analyzer import SemanticAnalyzer
 from pprint import pprint
 from .ast_formatter import format_ast
 from .errors import display_error
-from .ansi import YELLOW, RESET
+from ._ansi import YELLOW, RESET
 from ._cli_utils import stop_after, cli_err, compile_err
 import argparse
 import sys
