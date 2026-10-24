@@ -6,6 +6,7 @@ from .ast_formatter import format_ast
 from .errors import display_error
 from ._ansi import YELLOW, RESET
 from ._cli_utils import stop_after, cli_err, compile_err
+from .sb3_cgen import CodeGenerator
 import argparse
 import sys
 
@@ -29,6 +30,11 @@ def main() -> int:
         "--show-state",
         action="store_true",
         help="display the compiler state when compilation stops"
+    )
+    
+    parser.add_argument(
+        "--enable_uncompleted_codegen",
+        action="store_true"
     )
 
     args = parser.parse_args()
@@ -66,6 +72,14 @@ def main() -> int:
     if errors: compile_err(errors, src)
     stop_after("analysis", format_ast(ast), args)
 
-    print(f"{YELLOW}note:{RESET} Codegen not added. Showing Abstract Syntax Tree instead.")
-    print(format_ast(ast))
+    if not args.enable_uncompleted_codegen:
+        print(f"{YELLOW}note:{RESET} Codegen not added. Showing Abstract Syntax Tree instead.")
+        print(format_ast(ast))
+    else:
+        print("Emitting to 'exp-emit' directory...")
+        
+        cgen = CodeGenerator(ast)
+        cgen.generate_at("exp-emit")
+        print("Finished emitting.")
+        
     return 0

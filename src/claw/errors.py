@@ -7,17 +7,17 @@ class Error(Exception):
     span: Span
     cause: str
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         Exception.__init__(self, self.cause)
         
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{BOLD}{RED}error:{RESET} {self.span.start.row + 1}:{self.span.start.column + 1}: {self.cause}"
     
 class LexerError(Error): pass
 class ParserError(Error): pass
 class SemanticError(Error): pass
 
-def display_error(error: Error, src: str):
+def display_error(error: Error, src: str) -> None:
     lines = src.splitlines()
     start = error.span.start
     end = error.span.end

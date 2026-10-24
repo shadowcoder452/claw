@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 from enum import Enum, auto
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .types import LexResult, TokenStream
 from .location import Location, Span
 from .errors import LexerError
 
@@ -66,13 +71,13 @@ KEYWORDS = {
 class Token:
     _type: TokenType
     value: str
-    location: Optional[Location] = field(compare=False, default=None)
+    location: Location = field(compare=False)
     
 class Lexer:
-    def __init__(self, source: str):
+    def __init__(self, source: str) -> None:
         self.source = source
         self.errors: list[LexerError] = []
-        self.tokens: list[Token] = []
+        self.tokens: TokenStream = []
         self.cursor = 0
         self.row = 0
         self.column = 0
@@ -89,7 +94,7 @@ class Lexer:
             return self.source[pos]
         return '\0'
 
-    def increment(self):
+    def increment(self) -> None:
         if self.current == '\n':
             self.row += 1
             self.column = 0
@@ -97,7 +102,7 @@ class Lexer:
             self.column += 1
         self.cursor += 1
 
-    def push_token(self, token_type: TokenType, value: str, location: Location):
+    def push_token(self, token_type: TokenType, value: str, location: Location) -> None:
         token = Token(
             token_type,
             value,
@@ -105,7 +110,7 @@ class Lexer:
         )
         self.tokens.append(token)
     
-    def lex(self) -> tuple[list[Token], list[LexerError]]:
+    def lex(self) -> LexResult:
         self.tokens.clear()
         self.cursor = 0
         self.row = 0
@@ -115,7 +120,7 @@ class Lexer:
             # Add newline tokens
             if self.current == '\n' or self.current == ';':
                 value = "newline" if self.current == '\n' else self.current
-                self.push_token(SINGLE_CHAR_TOKENS.get(self.current), value, Location(self.row, self.column))
+                self.push_token(SINGLE_CHAR_TOKENS[self.current], value, Location(self.row, self.column))
                 self.increment()
                 continue
 

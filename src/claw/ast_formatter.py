@@ -11,9 +11,11 @@ from .nodes import (
     Block,
     VarDeclStmt,
 )
+from .nodes import Expression, Statement
+from .types import Program
 
 
-def format_node(node, indent: int = 0) -> str:
+def format_node(node: Expression | Statement, indent: int = 0) -> str:
     prefix = " " * indent
 
     match node:
@@ -91,14 +93,16 @@ def format_node(node, indent: int = 0) -> str:
             )
 
         case ReturnStmt(expr=expr):
+            if expr is None:
+                return f"{prefix}ReturnStmt"
             return (
                 f"{prefix}ReturnStmt\n"
-                f"{format_node(node.expr, indent + 2)}"
+                f"{format_node(expr, indent + 2)}"
             )
 
         case _:
             return f"{prefix}unknown node {type(node).__name__}"
 
 
-def format_ast(functions: list[Function]) -> str:
+def format_ast(functions: Program) -> str:
     return "\n".join(format_node(function) for function in functions)

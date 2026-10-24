@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 from .lexer import Token, TokenType
 from .location import Span
+
+if TYPE_CHECKING:
+    from .types import ExpressionList, IdentifierList, StatementList
 
 @dataclass
 class Expression:
@@ -35,7 +41,7 @@ class IdentifierExpr(Expression):
 @dataclass
 class CallExpr(Expression):
     callee: IdentifierExpr
-    arguments: list[Expression]
+    arguments: ExpressionList
 
 @dataclass
 class AssignExpr(Expression):
@@ -44,7 +50,7 @@ class AssignExpr(Expression):
 
 @dataclass
 class IfStmt(Statement):
-    condition: Statement
+    condition: Expression
     then_expr: Statement
     else_expr: Statement | None
 
@@ -52,12 +58,12 @@ class IfStmt(Statement):
 @dataclass
 class Function(Statement):
     name: IdentifierExpr
-    parameters: list[IdentifierExpr]
+    parameters: IdentifierList
     body: Statement
     
 @dataclass
 class Block(Statement):
-    statements: list[Statement]
+    statements: StatementList
     
 @dataclass
 class VarDeclStmt(Statement):

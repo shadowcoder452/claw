@@ -16,6 +16,7 @@ from .nodes import (
     VarDeclStmt,
     ReturnStmt,
 )
+from .types import ExpressionList, IdentifierList, ParseResult, Program, TokenStream
 
 # Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
@@ -33,7 +34,7 @@ RIGHT_ASSOCIATIVE = {}
 
 
 class Parser:
-    def __init__(self, tokens: list[Token]):
+    def __init__(self, tokens: TokenStream) -> None:
         self.tokens = tokens
         self.cursor = 0
         self.errors: list[ParserError] = []
@@ -73,12 +74,12 @@ class Parser:
             return self.tokens[index]
         return self.tokens[-1]
 
-    def skip_newlines(self):
+    def skip_newlines(self) -> None:
         while self.current._type is TokenType.Newline:
             self.consume()
 
-    def parse(self) -> tuple[list[Statement], list[ParserError]]:
-        statements = []
+    def parse(self) -> ParseResult:
+        statements: Program = []
 
         while self.current._type is not TokenType.Eof:
             self.skip_newlines()
@@ -98,7 +99,7 @@ class Parser:
 
         return statements, self.errors
 
-    def synchronize_top_level(self):
+    def synchronize_top_level(self) -> None:
         while self.current._type not in (
             TokenType.Eof,
             TokenType.Newline,
@@ -244,7 +245,7 @@ class Parser:
     def parse_call(self, ident: IdentifierExpr) -> CallExpr:
         self.consume()  # opening parenthesis
         self.skip_newlines()
-        arguments: list[Expression] = []
+        arguments: ExpressionList = []
 
         while self.current._type not in (TokenType.RParen, TokenType.Eof):
             arguments.append(self.parse_expression())
@@ -308,7 +309,7 @@ class Parser:
         )
 
         self.skip_newlines()
-        parameters: list[IdentifierExpr] = []
+        parameters: IdentifierList = []
 
         if self.current._type is not TokenType.RParen:
             while True:

@@ -1,4 +1,4 @@
-BOLD = "\033[1m"
-RED = "\033[31m"
-YELLOW = "\033[33m"
-RESET = "\033[0m"
+BOLD: str = "\033[1m"
+RED: str = "\033[31m"
+YELLOW: str = "\033[33m"
+RESET: str = "\033[0m"

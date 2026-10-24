@@ -1,9 +1,10 @@
+from claw.errors import SemanticError
 from claw.lexer import Lexer
 from claw.parser import Parser
 from claw.semantic_analyzer import SemanticAnalyzer
 
 
-def analyze(source: str):
+def analyze(source: str) -> tuple[SemanticAnalyzer, list[SemanticError]]:
     tokens, lexer_errors = Lexer(source).lex()
     assert not lexer_errors
 
@@ -15,7 +16,7 @@ def analyze(source: str):
     return analyzer, errors
 
 
-def error_causes(errors):
+def error_causes(errors: list[SemanticError]) -> list[str]:
     return [error.cause for error in errors]
 
 

@@ -3,14 +3,15 @@ import pytest
 from claw.errors import LexerError
 from claw.lexer import Lexer, Token, TokenType
 from claw.location import Location, Span
+from claw.types import LexResult
 
 
-def lex(source: str):
+def lex(source: str) -> LexResult:
     return Lexer(source).lex()
 
 
 def token(token_type: TokenType, value: str) -> Token:
-    return Token(token_type, value)
+    return Token(token_type, value, Location(0, 0))
 
 
 def test_number():

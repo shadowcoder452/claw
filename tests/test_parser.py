@@ -8,22 +8,25 @@ from claw.nodes import (
     Block,
     CallExpr,
     ExprStmt,
+    Expression,
     Function,
     IdentifierExpr,
     IfStmt,
     NumberExpr,
     ReturnStmt,
+    Statement,
 )
 from claw.parser import Parser
+from claw.types import ParseResult
 
 
-def parse(source: str):
+def parse(source: str) -> ParseResult:
     tokens, lexer_errors = Lexer(source).lex()
     assert not lexer_errors
     return Parser(tokens).parse()
 
 
-def parse_expression(source: str):
+def parse_expression(source: str) -> Expression | Statement:
     statements, errors = parse(f"fn test() {{\n{source}\n}}")
     assert not errors
     function = statements[0]
@@ -33,7 +36,7 @@ def parse_expression(source: str):
     return statement.expr if isinstance(statement, ExprStmt) else statement
 
 
-def number_value(node):
+def number_value(node: Expression) -> str:
     assert isinstance(node, NumberExpr)
     return node.value.value
 
