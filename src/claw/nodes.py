@@ -1,8 +1,7 @@
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-from .lexer import Token, TokenType
+from .lexer import Token
 from .location import Span
 
 if TYPE_CHECKING:
@@ -22,7 +21,7 @@ class ExprStmt(Statement):
 
 
 @dataclass
-class NumberExpr(Expression):
+class Number(Expression):
     value: Token
 
 
@@ -34,22 +33,22 @@ class BinaryOp(Expression):
 
 
 @dataclass
-class IdentifierExpr(Expression):
+class Identifier(Expression):
     value: Token
 
 
 @dataclass
-class CallExpr(Expression):
-    callee: IdentifierExpr
+class Call(Expression):
+    callee: Identifier
     arguments: ExpressionList
 
 @dataclass
-class AssignExpr(Expression):
-    target: IdentifierExpr
+class Assign(Expression):
+    target: Identifier
     value: Expression
 
 @dataclass
-class IfStmt(Statement):
+class If(Statement):
     condition: Expression
     then_expr: Statement
     else_expr: Statement | None
@@ -57,18 +56,23 @@ class IfStmt(Statement):
 
 @dataclass
 class Function(Statement):
-    name: IdentifierExpr
+    name: Identifier
     parameters: IdentifierList
     body: Statement
     
+@dataclass
+class WhenFlagClicked(Statement):
+    body: Statement
+    
+
 @dataclass
 class Block(Statement):
     statements: StatementList
     
 @dataclass
-class VarDeclStmt(Statement):
-    name: IdentifierExpr
+class VarDecl(Statement):
+    name: Identifier
 
 @dataclass
-class ReturnStmt(Statement):
+class Return(Statement):
     expr: Expression | None = field(default=None)

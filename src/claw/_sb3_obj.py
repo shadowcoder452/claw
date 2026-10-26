@@ -12,6 +12,7 @@ class Costume:
     def __init__(
         self,
         name: str,
+        *,
         source_path: str,
         rotation_center_x: float,
         rotation_center_y: float,
@@ -51,6 +52,7 @@ class Sound:
     def __init__(
         self,
         name: str,
+        *,
         source_path: str,
         rate: int,
         sample_count: int,
@@ -82,6 +84,81 @@ class Sound:
             "sampleCount": self.sample_count,
             "md5ext": self.md5ext,
         }
+        
+class Procedure:
+    """Represents a custom Scratch procedure."""
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        arguments: list[str] | None = None,
+        body: list[Block] | None = None,
+        defaults: list[str] | None = None,
+        warp: bool = False,
+    ) -> None:
+        self.name = name
+        self.arguments = [] if arguments is None else arguments
+        self.body = [] if body is None else body
+        self.defaults = (
+            [""] * len(self.arguments)
+            if defaults is None
+            else defaults
+        )
+        self.warp = warp
+
+        if len(self.defaults) != len(self.arguments):
+            raise ValueError("defaults must have one value per argument")
+
+        self.argument_ids = [uuid.uuid4().hex for _ in self.arguments]
+        self.argument_reporters: list[Block] = []
+
+    @property
+    def proccode(self) -> str:
+        return self.name + "".join(" %s" for _ in self.arguments)
+
+    def mutation(self, *, prototype: bool = True) -> dict[str, object]:
+        result: dict[str, object] = {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": self.proccode,
+            "argumentids": json.dumps(self.argument_ids),
+            "warp": json.dumps(self.warp),
+        }
+
+        if prototype:
+            result["argumentnames"] = json.dumps(self.arguments)
+            result["argumentdefaults"] = json.dumps(self.defaults)
+
+        return result
+
+    def build(self) -> tuple[Block, Block]:
+        definition = Block(
+            opcode="procedures_definition",
+            inputs={},
+            top_level=True,
+        )
+        prototype = Block(
+            opcode="procedures_prototype",
+            inputs={},
+            shadow=True,
+            parent=definition,
+            mutation=self.mutation(),
+        )
+        definition.inputs["custom_block"] = [1, prototype.id]
+
+        self.argument_reporters = []
+        for argument_id, argument_name in zip(self.argument_ids, self.arguments):
+            reporter = Block(
+                opcode="argument_reporter_string_number",
+                fields={"VALUE": [argument_name, None]},
+                shadow=True,
+                parent=prototype,
+            )
+            prototype.inputs[argument_id] = [1, reporter.id]
+            self.argument_reporters.append(reporter)
+
+        return definition, prototype
 
 class Block:
     """Represents a single block in a Scratch script."""
@@ -89,9 +166,9 @@ class Block:
     def __init__(
         self,
         opcode: str,
+        *,
         inputs: dict[str, object] | None = None,
         fields: dict[str, object] | None = None,
-        *,
         mutation: dict[str, object] | None = None,
         shadow: bool = False,
         top_level: bool = False,

@@ -116,6 +116,7 @@ def test_single_character_token():
 def test_line_comment_is_ignored():
     tokens, errors = lex("// test comment\n <")
     assert tokens == [
+        token(TokenType.Newline, ""),
         token(TokenType.Less, "<"),
         token(TokenType.Eof, "End of file"),
     ]

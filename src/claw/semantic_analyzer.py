@@ -1,26 +1,23 @@
-
 from __future__ import annotations
-
 from enum import Enum, auto
-
+from .errors import SemanticError, Error
+from .types import Program
 from .nodes import (
-    AssignExpr,
+    Assign,
     BinaryOp,
     Block,
-    CallExpr,
+    Call,
     ExprStmt,
     Expression,
     Function as FunctionNode,
-    IdentifierExpr,
-    IfStmt,
-    NumberExpr,
-    VarDeclStmt,
-    ReturnStmt,
+    Identifier,
+    If,
+    Number,
+    VarDecl,
+    Return,
     Statement,
+    WhenFlagClicked,
 )
-from .errors import SemanticError, Error
-from .types import Program
-
 
 class Symbol:
     pass
@@ -71,6 +68,8 @@ class SymbolTable:
 class SemanticAnalyzer:
     def __init__(self, ast: Program) -> None:
         self.symbols = SymbolTable()
+        self.symbols.assign(Function(["message"]), "say")
+        self.symbols.assign(Function(["duration"]), "wait")
         self.ast = ast
         self.errors: list[SemanticError] = []
 
@@ -96,6 +95,9 @@ class SemanticAnalyzer:
             )
 
         return method(node)
+
+    def visit_WhenFlagClicked(self, node: WhenFlagClicked) -> None:
+        self.visit(node.body)
 
     def visit_Function(self, node: FunctionNode) -> None:
         parameters = [param.value.value for param in node.parameters]
@@ -131,14 +133,14 @@ class SemanticAnalyzer:
         finally:
             self.symbols = old_symbols
 
-    def visit_NumberExpr(self, node: NumberExpr) -> None:
+    def visit_Number(self, node: Number) -> None:
         pass
 
     def visit_BinaryOp(self, node: BinaryOp) -> None:
         self.visit(node.left)
         self.visit(node.right)
 
-    def visit_AssignExpr(self, node: AssignExpr) -> None:
+    def visit_Assign(self, node: Assign) -> None:
         name = node.target.value.value
         symbol = self.symbols.lookup(name)
 
@@ -156,7 +158,7 @@ class SemanticAnalyzer:
 
         self.visit(node.value)
 
-    def visit_IdentifierExpr(self, node: IdentifierExpr) -> None:
+    def visit_Identifier(self, node: Identifier) -> None:
         name = node.value.value
 
         if self.symbols.lookup(name) is None:
@@ -165,7 +167,7 @@ class SemanticAnalyzer:
                 f"undefined object `{name}` referenced",
             )
 
-    def visit_CallExpr(self, node: CallExpr) -> None:
+    def visit_Call(self, node: Call) -> None:
         name = node.callee.value.value
         symbol = self.symbols.lookup(name)
 
@@ -195,7 +197,7 @@ class SemanticAnalyzer:
         for statement in node.statements:
             self.visit(statement)
 
-    def visit_IfStmt(self, node: IfStmt) -> None:
+    def visit_If(self, node: If) -> None:
         self.visit(node.condition)
         self.visit(node.then_expr)
 
@@ -205,7 +207,7 @@ class SemanticAnalyzer:
     def visit_ExprStmt(self, node: ExprStmt) -> None:
         self.visit(node.expr)
 
-    def visit_VarDeclStmt(self, node: VarDeclStmt) -> None:
+    def visit_VarDecl(self, node: VarDecl) -> None:
         name = node.name.value.value
 
         if name in self.symbols.symbols:
@@ -216,6 +218,6 @@ class SemanticAnalyzer:
 
         self.symbols.assign(Variable(), name)
 
-    def visit_ReturnStmt(self, node: ReturnStmt) -> None:
+    def visit_Return(self, node: Return) -> None:
         if node.expr is not None:
             self.visit(node.expr)

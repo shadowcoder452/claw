@@ -1,5 +1,5 @@
-from .location import Span
 from dataclasses import dataclass
+from .location import Span
 from ._ansi import BOLD, YELLOW, RED, RESET
 
 @dataclass

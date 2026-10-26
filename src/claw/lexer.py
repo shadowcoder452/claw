@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -20,6 +19,7 @@ class TokenType(Enum):
     Else = auto()
     Var = auto()
     Return = auto()
+    OnFlag = auto()
     
     LParen = auto()
     RParen = auto()
@@ -65,6 +65,7 @@ KEYWORDS = {
     "else": TokenType.Else,
     "var": TokenType.Var,
     "return": TokenType.Return,
+    "onflag": TokenType.OnFlag
 }
 
 @dataclass
@@ -126,6 +127,7 @@ class Lexer:
 
             # skip comments
             if self.current == '/' and self.peek() == '/':
+                self.push_token(TokenType.Newline, "", Location(self.row, self.column))
                 while self.current != '\n' and self.current != '\0':
                     self.increment()
                 self.increment()
@@ -193,7 +195,6 @@ class Lexer:
                 "unexpected character"
             ))
             self.increment()
-
-        # add EOF token
+        
         self.tokens.append(Token(TokenType.Eof, "End of file", Location(self.row, self.column)))
         return self.tokens, self.errors

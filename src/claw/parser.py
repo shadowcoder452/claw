@@ -1,24 +1,24 @@
+from .types import ExpressionList, IdentifierList, ParseResult, Program, TokenStream
 from .lexer import Token, TokenType
 from .errors import ParserError
 from .location import Span, Location
 from .nodes import (
-    AssignExpr,
+    Assign,
     BinaryOp,
     Block,
-    CallExpr,
+    Call,
     ExprStmt,
     Expression,
     Function,
-    IdentifierExpr,
-    IfStmt,
-    NumberExpr,
+    Identifier,
+    If,
+    Number,
     Statement,
-    VarDeclStmt,
-    ReturnStmt,
+    VarDecl,
+    Return,
+    WhenFlagClicked,
 )
-from .types import ExpressionList, IdentifierList, ParseResult, Program, TokenStream
 
-# Operator precedence - higher number = higher precedence
 PRECEDENCE_MAP = {
     TokenType.Assign: 50,
     TokenType.Less: 100,
@@ -29,9 +29,6 @@ PRECEDENCE_MAP = {
     TokenType.Mul: 400,
     TokenType.Div: 400,
 }
-
-RIGHT_ASSOCIATIVE = {}
-
 
 class Parser:
     def __init__(self, tokens: TokenStream) -> None:
@@ -53,20 +50,25 @@ class Parser:
         self.cursor += 1
         return token
 
-    def consume_assert(self, expected: TokenType, error_message: str) -> Token:
+    def expect(self, expected: TokenType, error_message: str) -> Token:
         token = self.consume()
         if token._type is not expected:
             raise ParserError(Span(token.location, token.location), error_message)
         return token
+    
+    def expect_end(self, error_message: str) -> None:
+        token = self.consume()
+        if token._type not in (TokenType.Newline, TokenType.Eof):
+            raise ParserError(Span(token.location, token.location), error_message)
 
-    def parse_identifier(self) -> IdentifierExpr:
-        token = self.consume_assert(
+    def parse_identifier(self) -> Identifier:
+        token = self.expect(
             TokenType.Identifier,
             "expected identifier",
         )
         start = token.location
         end = Location(start.row, start.column + len(token.value))
-        return IdentifierExpr(Span(start, end), token)
+        return Identifier(Span(start, end), token)
 
     def peek(self, offset: int = 1) -> Token:
         index = self.cursor + offset
@@ -92,6 +94,7 @@ class Parser:
                 statements.append(self.parse_top_level_statement())
             except ParserError as err:
                 self.errors.append(err)
+                self.consume()
                 self.synchronize_top_level()
 
             if start == self.cursor and self.current._type is not TokenType.Eof:
@@ -102,23 +105,25 @@ class Parser:
     def synchronize_top_level(self) -> None:
         while self.current._type not in (
             TokenType.Eof,
-            TokenType.Newline,
             TokenType.Fn,
             TokenType.Var,
+            TokenType.OnFlag,
         ):
             self.consume()
 
         self.skip_newlines()
 
     def parse_top_level_statement(self) -> Statement:
-        if self.current._type is TokenType.Fn:
-            return self.parse_function()
-
         match self.current._type:
+            case TokenType.Fn:
+                return self.parse_function()
+            case TokenType.OnFlag:
+                return self.parse_when_flag_clicked()
             case TokenType.Var:
                 start = self.consume().location
                 name = self.parse_identifier()
-                return VarDeclStmt(
+                self.expect_end("Expected end of statement after variable declaration")
+                return VarDecl(
                     Span(start, name.span.end),
                     name,
                 )
@@ -159,7 +164,7 @@ class Parser:
                 token = self.consume()
                 start = token.location
                 end = Location(start.row, start.column + len(token.value))
-                return NumberExpr(Span(start, end), token)
+                return Number(Span(start, end), token)
 
             case TokenType.Identifier:
                 ident = self.parse_identifier()
@@ -189,12 +194,12 @@ class Parser:
             case TokenType.Identifier:
                 if self.peek()._type is TokenType.Assign:
                     ident = self.parse_identifier()
-                    self.consume()  # assignment operator
+                    self.consume()
                     expr = self.parse_expression()
 
                     return ExprStmt(
                         Span(ident.span.start, expr.span.end),
-                        AssignExpr(
+                        Assign(
                             Span(ident.span.start, expr.span.end),
                             ident,
                             expr,
@@ -211,7 +216,7 @@ class Parser:
                 expr = self.parse_expression()
                 return ExprStmt(expr.span, expr)
 
-    def parse_return_statement(self) -> ReturnStmt:
+    def parse_return_statement(self) -> Return:
         token = self.consume()
         start = token.location
         end = Location(start.row, start.column + len(token.value))
@@ -221,12 +226,12 @@ class Parser:
             TokenType.RCurly,
             TokenType.Eof,
         ):
-            return ReturnStmt(Span(start, end))
+            return Return(Span(start, end))
 
         expr = self.parse_expression()
-        return ReturnStmt(Span(start, expr.span.end), expr)
+        return Return(Span(start, expr.span.end), expr)
 
-    def parse_if_statement(self) -> IfStmt:
+    def parse_if_statement(self) -> If:
         start = self.consume().location
         condition = self.parse_expression()
 
@@ -240,10 +245,10 @@ class Parser:
             else_expr = self.parse_statement()
 
         end = else_expr.span.end if else_expr else then_expr.span.end
-        return IfStmt(Span(start, end), condition, then_expr, else_expr)
+        return If(Span(start, end), condition, then_expr, else_expr)
 
-    def parse_call(self, ident: IdentifierExpr) -> CallExpr:
-        self.consume()  # opening parenthesis
+    def parse_call(self, ident: Identifier) -> Call:
+        self.consume()
         self.skip_newlines()
         arguments: ExpressionList = []
 
@@ -261,12 +266,12 @@ class Parser:
                 )
 
         start = ident.span.start
-        end = self.consume_assert(
+        end = self.expect(
             TokenType.RParen,
             "expected closing parenthesis after function arguments",
         ).location
 
-        return CallExpr(Span(start, end), ident, arguments)
+        return Call(Span(start, end), ident, arguments)
 
     def parse_unary(self) -> Expression:
         if self.current._type is not TokenType.Minus:
@@ -277,7 +282,7 @@ class Parser:
 
         return BinaryOp(
             Span(start, expr.span.end),
-            NumberExpr(Span(start, start), Token(TokenType.Number, "0", start)),
+            Number(Span(start, start), Token(TokenType.Number, "0", start)),
             Token(TokenType.Minus, "-", start),
             expr,
         )
@@ -292,18 +297,24 @@ class Parser:
                 break
             statements.append(self.parse_statement())
 
-        end = self.consume_assert(
+        end = self.expect(
             TokenType.RCurly,
             "expected closing brace before end of file",
         ).location
 
         return Block(Span(start, end), statements)
 
+    def parse_when_flag_clicked(self) -> WhenFlagClicked:
+        start = self.consume().location
+        self.skip_newlines()
+        body = self.parse_statement()
+        return WhenFlagClicked(Span(start, body.span.end), body)
+
     def parse_function(self) -> Function:
         start = self.consume().location
         name = self.parse_identifier()
 
-        self.consume_assert(
+        self.expect(
             TokenType.LParen,
             "expected opening parenthesis after function name",
         )
@@ -328,7 +339,7 @@ class Parser:
                 self.consume()
                 self.skip_newlines()
 
-        self.consume_assert(
+        self.expect(
             TokenType.RParen,
             "expected closing parenthesis after parameters",
         )
@@ -350,7 +361,7 @@ class Parser:
         while True:
             next_precedence = PRECEDENCE_MAP.get(self.current._type, 0)
 
-            if op._type in RIGHT_ASSOCIATIVE:
+            if op._type is TokenType.Assign:
                 if next_precedence < current_precedence:
                     break
             else:
@@ -361,12 +372,12 @@ class Parser:
             right = self.parse_binary_op(right, next_op)
 
         if op._type is TokenType.Assign:
-            if not isinstance(left, IdentifierExpr):
+            if not isinstance(left, Identifier):
                 raise ParserError(
                     left.span,
                     "left side of assignment must be an identifier",
                 )
 
-            return AssignExpr(Span(left.span.start, right.span.end), left, right)
+            return Assign(Span(left.span.start, right.span.end), left, right)
 
         return BinaryOp(Span(left.span.start, right.span.end), left, op, right)

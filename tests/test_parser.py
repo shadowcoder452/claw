@@ -3,17 +3,17 @@ import pytest
 from claw.errors import ParserError
 from claw.lexer import Lexer
 from claw.nodes import (
-    AssignExpr,
+    Assign,
     BinaryOp,
     Block,
-    CallExpr,
+    Call,
     ExprStmt,
     Expression,
     Function,
-    IdentifierExpr,
-    IfStmt,
-    NumberExpr,
-    ReturnStmt,
+    Identifier,
+    If,
+    Number,
+    Return,
     Statement,
 )
 from claw.parser import Parser
@@ -37,7 +37,7 @@ def parse_expression(source: str) -> Expression | Statement:
 
 
 def number_value(node: Expression) -> str:
-    assert isinstance(node, NumberExpr)
+    assert isinstance(node, Number)
     return node.value.value
 
 
@@ -47,7 +47,7 @@ def test_number_expression():
 
 def test_identifier_expression():
     expression = parse_expression("x")
-    assert isinstance(expression, IdentifierExpr)
+    assert isinstance(expression, Identifier)
     assert expression.value.value == "x"
 
 
@@ -101,14 +101,14 @@ def test_addition_is_left_associative():
 
 def test_function_call():
     expression = parse_expression("foo(42)")
-    assert isinstance(expression, CallExpr)
+    assert isinstance(expression, Call)
     assert expression.callee.value.value == "foo"
     assert [number_value(arg) for arg in expression.arguments] == ["42"]
 
 
 def test_function_call_with_multiple_expression_arguments():
     expression = parse_expression("foo(1 + 2, 3 * 4)")
-    assert isinstance(expression, CallExpr)
+    assert isinstance(expression, Call)
     assert len(expression.arguments) == 2
     assert expression.arguments[0].op.value == "+"
     assert expression.arguments[1].op.value == "*"
@@ -116,7 +116,7 @@ def test_function_call_with_multiple_expression_arguments():
 
 def test_if_statement_with_optional_else():
     expression = parse_expression("if 1 < 2 3")
-    assert isinstance(expression, IfStmt)
+    assert isinstance(expression, If)
     assert expression.condition.op.value == "<"
     assert expression.then_expr.expr.value.value == "3"
     assert expression.else_expr is None
@@ -124,7 +124,7 @@ def test_if_statement_with_optional_else():
 
 def test_if_else_statement():
     expression = parse_expression("if 1 < 2 3 else 4")
-    assert isinstance(expression, IfStmt)
+    assert isinstance(expression, If)
     assert expression.then_expr.expr.value.value == "3"
     assert expression.else_expr.expr.value.value == "4"
 
@@ -175,11 +175,11 @@ def test_return_statement():
     statements, errors = parse("fn test() return 42")
     assert not errors
     function = statements[0]
-    assert isinstance(function.body, ReturnStmt)
+    assert isinstance(function.body, Return)
 
 def test_assignment_expression():
     expression = parse_expression("x = 42")
-    assert isinstance(expression, AssignExpr)
+    assert isinstance(expression, Assign)
     assert expression.target.value.value == "x"
     assert number_value(expression.value) == "42"
 

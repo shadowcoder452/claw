@@ -1,5 +1,3 @@
-"""Public API for the Claw compiler package."""
-
 from . import types
 from .errors import (
     Error,
@@ -10,18 +8,20 @@ from .errors import (
 )
 from .lexer import Lexer, Token, TokenType
 from .nodes import (
-    AssignExpr,
+    Assign,
     BinaryOp,
     Block,
-    CallExpr,
+    Call,
     ExprStmt,
     Expression,
     Function,
-    IdentifierExpr,
-    IfStmt,
-    NumberExpr,
+    Identifier,
+    If,
+    Number,
     Statement,
-    VarDeclStmt,
+    VarDecl,
+    Return,
+    WhenFlagClicked,
 )
 from .parser import Parser
 from .semantic_analyzer import SemanticAnalyzer
@@ -37,22 +37,22 @@ from .types import (
 )
 
 __all__ = [
-    "AssignExpr",
+    "Assign",
     "BinaryOp",
     "Block",
-    "CallExpr",
+    "Call",
     "Error",
     "ExprStmt",
     "ExpressionList",
     "Expression",
     "Function",
     "IdentifierList",
-    "IdentifierExpr",
-    "IfStmt",
+    "Identifier",
+    "If",
     "Lexer",
     "LexerError",
     "LexResult",
-    "NumberExpr",
+    "Number",
     "Parser",
     "ParserError",
     "ParseResult",
@@ -64,7 +64,9 @@ __all__ = [
     "Token",
     "TokenStream",
     "TokenType",
-    "VarDeclStmt",
+    "VarDecl",
+    "Return",
+    "WhenFlagClicked",
     "display_error",
     "format_ast",
     "format_node",

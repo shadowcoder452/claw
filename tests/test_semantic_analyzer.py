@@ -45,7 +45,7 @@ def test_assignment_to_undefined_identifier_is_reported():
 
 
 def test_redeclaring_variable_is_reported():
-    _, errors = analyze("var item var item")
+    _, errors = analyze("var item; var item")
 
     assert error_causes(errors) == ["object `item` redefined"]
 
@@ -72,7 +72,7 @@ def test_calling_undefined_function_is_reported():
 
 
 def test_calling_variable_is_reported():
-    _, errors = analyze("var item fn main() { item() }")
+    _, errors = analyze("var item; fn main() { item() }")
 
     assert error_causes(errors) == ["called object `item` is not a function"]
 

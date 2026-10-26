@@ -1,18 +1,19 @@
+from .nodes import Expression, Statement
+from .types import Program
 from .nodes import (
     Function,
     ExprStmt,
-    NumberExpr,
+    Number,
     BinaryOp,
-    ReturnStmt,
-    IdentifierExpr,
-    CallExpr,
-    AssignExpr,
-    IfStmt,
+    Return,
+    Identifier,
+    Call,
+    Assign,
+    If,
     Block,
-    VarDeclStmt,
+    VarDecl,
+    WhenFlagClicked,
 )
-from .nodes import Expression, Statement
-from .types import Program
 
 
 def format_node(node: Expression | Statement, indent: int = 0) -> str:
@@ -37,13 +38,19 @@ def format_node(node: Expression | Statement, indent: int = 0) -> str:
                 f"{format_node(body, indent + 2)}"
             )
 
+        case WhenFlagClicked(body=body):
+            return (
+                f"{prefix}WhenFlagClicked\n"
+                f"{format_node(body, indent + 2)}"
+            )
+
         case ExprStmt(expr=expr):
             return format_node(expr, indent)
 
-        case NumberExpr(value=value):
+        case Number(value=value):
             return f"{prefix}Number: {value.value}"
 
-        case IdentifierExpr(value=value):
+        case Identifier(value=value):
             return f"{prefix}Identifier: {value.value}"
 
         case BinaryOp(left=left, op=op, right=right):
@@ -53,20 +60,20 @@ def format_node(node: Expression | Statement, indent: int = 0) -> str:
                 f"{format_node(right, indent + 2)}"
             )
 
-        case CallExpr(callee=callee, arguments=arguments):
+        case Call(callee=callee, arguments=arguments):
             result = f"{prefix}Call: {callee.value.value}"
             for argument in arguments:
                 result += f"\n{format_node(argument, indent + 2)}"
             return result
 
-        case AssignExpr(target=target, value=value):
+        case Assign(target=target, value=value):
             return (
                 f"{prefix}Assign\n"
                 f"{format_node(target, indent + 2)}\n"
                 f"{format_node(value, indent + 2)}"
             )
 
-        case IfStmt(
+        case If(
             condition=condition,
             then_expr=then_expr,
             else_expr=else_expr,
@@ -86,17 +93,17 @@ def format_node(node: Expression | Statement, indent: int = 0) -> str:
                 result += f"\n{format_node(statement, indent + 2)}"
             return result
 
-        case VarDeclStmt(name=name):
+        case VarDecl(name=name):
             return (
                 f"VarDecl\n"
                 f"{format_node(node.name, indent + 2)}"
             )
 
-        case ReturnStmt(expr=expr):
+        case Return(expr=expr):
             if expr is None:
-                return f"{prefix}ReturnStmt"
+                return f"{prefix}Return"
             return (
-                f"{prefix}ReturnStmt\n"
+                f"{prefix}Return\n"
                 f"{format_node(expr, indent + 2)}"
             )
 
