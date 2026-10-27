@@ -5,7 +5,7 @@ from .lexer import Token
 from .location import Span
 
 if TYPE_CHECKING:
-    from .types import ExpressionList, IdentifierList, StatementList
+    from .type_aliases import ExpressionList, IdentifierList, StatementList
 
 @dataclass
 class Expression:

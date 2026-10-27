@@ -1,4 +1,4 @@
-from . import types
+from . import type_aliases
 from .errors import (
     Error,
     LexerError,
@@ -26,7 +26,7 @@ from .nodes import (
 from .parser import Parser
 from .semantic_analyzer import SemanticAnalyzer
 from .ast_formatter import format_ast, format_node
-from .types import (
+from .type_aliases import (
     ExpressionList,
     IdentifierList,
     LexResult,
@@ -35,6 +35,7 @@ from .types import (
     StatementList,
     TokenStream,
 )
+from .sb3_cgen import CodeGenerator, NULL_VALUE
 
 __all__ = [
     "Assign",
@@ -70,5 +71,7 @@ __all__ = [
     "display_error",
     "format_ast",
     "format_node",
-    "types",
+    "type_aliases",
+    "CodeGenerator",
+    "NULL_VALUE"
 ]

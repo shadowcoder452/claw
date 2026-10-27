@@ -17,7 +17,7 @@ from claw.nodes import (
     Statement,
 )
 from claw.parser import Parser
-from claw.types import ParseResult
+from claw.type_aliases import ParseResult
 
 
 def parse(source: str) -> ParseResult:

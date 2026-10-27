@@ -33,14 +33,23 @@ def main() -> int:
     )
     
     parser.add_argument(
-        "--enable_uncompleted_codegen",
+        "--enable-uncompleted-codegen",
         action="store_true"
+    )
+
+    parser.add_argument(
+        "-o", "--output",
+        default="out.sb3",
+        help="Output name for compiled file"
     )
 
     args = parser.parse_args()
 
     if args.show_state and not args.stop_after:
         parser.error("--show-state requires --stop-after")
+
+    if args.output and not args.enable_uncompleted_codegen:
+        parser.error("--output requires --enable_uncompleted_codegen")
 
     try:
         with open(args.file, "r") as f:
@@ -76,10 +85,7 @@ def main() -> int:
         print(f"{YELLOW}note:{RESET} Codegen not added. Showing Abstract Syntax Tree instead.")
         print(format_ast(ast))
     else:
-        print("Emitting to 'exp-emit' directory...")
-        
         cgen = CodeGenerator(ast)
-        cgen.generate_at("exp-emit")
-        print("Finished emitting.")
+        cgen.generate().package(args.output)
         
     return 0

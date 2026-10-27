@@ -2,7 +2,8 @@
 A programming language that compiles to Scratch .sb3 format.
 
 ## WORK IN PROGRESS
-Claw is no where close to being finished. The codegen has not been added meaning that no .sb3 is generated yet.
+- Claw is no where close to being finished. The codegen has not been added meaning that no .sb3 is generated yet.
+- To use uncompleted codegen (expect errors), pass in the --enable-uncompleted-codegen and -o arguments.
 
 
 ### Installation

@@ -1,5 +1,5 @@
 from .nodes import Expression, Statement
-from .types import Program
+from .type_aliases import Program
 from .nodes import (
     Function,
     ExprStmt,

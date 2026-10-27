@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .types import LexResult, TokenStream
+    from .type_aliases import LexResult, TokenStream
 from .location import Location, Span
 from .errors import LexerError
 

@@ -3,6 +3,7 @@ import hashlib
 import uuid
 import json
 import shutil
+import tempfile
 from pathlib import Path
 
 
@@ -12,8 +13,7 @@ class Costume:
     def __init__(
         self,
         name: str,
-        *,
-        source_path: str,
+        source_path: str | Path,
         rotation_center_x: float,
         rotation_center_y: float,
     ) -> None:
@@ -52,8 +52,7 @@ class Sound:
     def __init__(
         self,
         name: str,
-        *,
-        source_path: str,
+        source_path: str | Path,
         rate: int,
         sample_count: int,
     ) -> None:
@@ -341,39 +340,41 @@ class Project:
             "meta": self.meta,
         }
 
-    def package(self, filename: str) -> None:
+    def package(self, filename: str | Path) -> None:
         """Package the project as a Scratch .sb3 file."""
-        output_path = Path(f"{filename}.sb3")
-        folder = Path(filename)
+        output_path = Path(filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_path.is_dir():
+            raise IsADirectoryError(f"output path is a directory: {output_path}")
 
-        folder.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary_path = Path(temporary_directory)
+            project_folder = temporary_path / "project"
+            project_folder.mkdir()
 
-        with open(folder / "project.json", "w", encoding="utf-8") as file:
-            json.dump(
-                self.serialize(),
-                file,
-                indent=4,
-                ensure_ascii=False,
-            )
-
-        # Copy costume and sound assets.
-        for target in self.targets:
-            for asset in target.costumes + target.sounds:
-                if not asset.source_path.exists():
-                    raise FileNotFoundError(
-                        f"Asset file not found: {asset.source_path}"
-                    )
-
-                shutil.copy2(
-                    asset.source_path,
-                    folder / asset.md5ext,
+            with open(project_folder / "project.json", "w", encoding="utf-8") as file:
+                json.dump(
+                    self.serialize(),
+                    file,
+                    indent=4,
+                    ensure_ascii=False,
                 )
+                
+            for target in self.targets:
+                for asset in target.costumes + target.sounds:
+                    if not asset.source_path.exists():
+                        raise FileNotFoundError(
+                            f"Asset file not found: {asset.source_path}"
+                        )
 
-        # Create the archive, then rename it to .sb3.
-        archive = shutil.make_archive(
-            filename,
-            "zip",
-            root_dir=folder,
-        )
-
-        Path(archive).replace(output_path)
+                    shutil.copy(
+                        asset.source_path,
+                        project_folder / asset.md5ext,
+                    )
+                    
+            archive = shutil.make_archive(
+                str(temporary_path / "project_archive"),
+                "zip",
+                root_dir=project_folder,
+            )
+            shutil.move(archive, output_path)

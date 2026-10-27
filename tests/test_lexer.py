@@ -3,7 +3,7 @@ import pytest
 from claw.errors import LexerError
 from claw.lexer import Lexer, Token, TokenType
 from claw.location import Location, Span
-from claw.types import LexResult
+from claw.type_aliases import LexResult
 
 
 def lex(source: str) -> LexResult:

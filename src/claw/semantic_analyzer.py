@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum, auto
 from .errors import SemanticError, Error
-from .types import Program
+from .type_aliases import Program
 from .nodes import (
     Assign,
     BinaryOp,

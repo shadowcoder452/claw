@@ -1,4 +1,4 @@
-from .types import ExpressionList, IdentifierList, ParseResult, Program, TokenStream
+from .type_aliases import ExpressionList, IdentifierList, ParseResult, Program, TokenStream
 from .lexer import Token, TokenType
 from .errors import ParserError
 from .location import Span, Location
