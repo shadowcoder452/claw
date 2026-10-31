@@ -118,15 +118,15 @@ def test_if_statement_with_optional_else():
     expression = parse_expression("if 1 < 2 3")
     assert isinstance(expression, If)
     assert expression.condition.op.value == "<"
-    assert expression.then_expr.expr.value.value == "3"
-    assert expression.else_expr is None
+    assert expression.then.expr.value.value == "3"
+    assert expression._else is None
 
 
 def test_if_else_statement():
     expression = parse_expression("if 1 < 2 3 else 4")
     assert isinstance(expression, If)
-    assert expression.then_expr.expr.value.value == "3"
-    assert expression.else_expr.expr.value.value == "4"
+    assert expression.then.expr.value.value == "3"
+    assert expression._else.expr.value.value == "4"
 
 
 def test_function_with_parameters():

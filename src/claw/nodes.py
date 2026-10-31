@@ -50,8 +50,8 @@ class Assign(Expression):
 @dataclass
 class If(Statement):
     condition: Expression
-    then_expr: Statement
-    else_expr: Statement | None
+    then: Statement
+    _else: Statement | None
 
 
 @dataclass

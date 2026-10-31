@@ -6,7 +6,7 @@ from .ast_formatter import format_ast
 from .errors import display_error
 from ._ansi import YELLOW, RESET
 from ._cli_utils import stop_after, cli_err, compile_err
-from .sb3_cgen import CodeGenerator
+from .codegen import CodeGenerator
 import argparse
 import sys
 
@@ -39,7 +39,6 @@ def main() -> int:
 
     parser.add_argument(
         "-o", "--output",
-        default="out.sb3",
         help="Output name for compiled file"
     )
 
@@ -50,6 +49,8 @@ def main() -> int:
 
     if args.output and not args.enable_uncompleted_codegen:
         parser.error("--output requires --enable_uncompleted_codegen")
+        
+    args.output = args.output or "out.sb3"
 
     try:
         with open(args.file, "r") as f:

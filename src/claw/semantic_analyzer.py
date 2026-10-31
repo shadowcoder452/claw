@@ -199,10 +199,10 @@ class SemanticAnalyzer:
 
     def visit_If(self, node: If) -> None:
         self.visit(node.condition)
-        self.visit(node.then_expr)
+        self.visit(node.then)
 
-        if node.else_expr is not None:
-            self.visit(node.else_expr)
+        if node._else is not None:
+            self.visit(node._else)
 
     def visit_ExprStmt(self, node: ExprStmt) -> None:
         self.visit(node.expr)

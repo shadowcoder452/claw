@@ -35,7 +35,7 @@ from .type_aliases import (
     StatementList,
     TokenStream,
 )
-from .sb3_cgen import CodeGenerator, NULL_VALUE
+from .codegen import CodeGenerator, NULL_VALUE
 
 __all__ = [
     "Assign",

@@ -61,15 +61,6 @@ class Parser:
         if token._type not in (TokenType.Newline, TokenType.Eof):
             raise ParserError(Span(token.location, token.location), error_message)
 
-    def parse_identifier(self) -> Identifier:
-        token = self.expect(
-            TokenType.Identifier,
-            "expected identifier",
-        )
-        start = token.location
-        end = Location(start.row, start.column + len(token.value))
-        return Identifier(Span(start, end), token)
-
     def peek(self, offset: int = 1) -> Token:
         index = self.cursor + offset
         if index < len(self.tokens):
@@ -236,16 +227,25 @@ class Parser:
         condition = self.parse_expression()
 
         self.skip_newlines()
-        then_expr = self.parse_statement()
+        then = self.parse_statement()
         self.skip_newlines()
 
-        else_expr = None
+        _else = None
         if self.current._type is TokenType.Else:
             self.consume()
-            else_expr = self.parse_statement()
+            _else = self.parse_statement()
 
-        end = else_expr.span.end if else_expr else then_expr.span.end
-        return If(Span(start, end), condition, then_expr, else_expr)
+        end = _else.span.end if _else else then.span.end
+        return If(Span(start, end), condition, then, _else)
+
+    def parse_identifier(self) -> Identifier:
+        token = self.expect(
+            TokenType.Identifier,
+            "expected identifier",
+        )
+        start = token.location
+        end = Location(start.row, start.column + len(token.value))
+        return Identifier(Span(start, end), token)
 
     def parse_call(self, ident: Identifier) -> Call:
         self.consume()

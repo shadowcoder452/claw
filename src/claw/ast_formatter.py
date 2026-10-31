@@ -75,16 +75,16 @@ def format_node(node: Expression | Statement, indent: int = 0) -> str:
 
         case If(
             condition=condition,
-            then_expr=then_expr,
-            else_expr=else_expr,
+            then=then,
+            _else=_else,
         ):
             result = (
                 f"{prefix}If\n"
                 f"{format_node(condition, indent + 2)}\n"
-                f"{format_node(then_expr, indent + 2)}"
+                f"{format_node(then, indent + 2)}"
             )
-            if else_expr is not None:
-                result += f"\n{format_node(else_expr, indent + 2)}"
+            if _else is not None:
+                result += f"\n{format_node(_else, indent + 2)}"
             return result
 
         case Block(statements=statements):
