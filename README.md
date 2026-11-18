@@ -1,3 +1,5 @@
+# Discontinued for a while since this project burnt me out quick
+
 # Claw
 A programming language that compiles to Scratch .sb3 format.
 
